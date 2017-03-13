@@ -30,9 +30,13 @@ public class TestRunner extends Runner {
             protected Statement withBefores(FrameworkMethod method, Object target,
                                             Statement statement) {
 
+                connectionHelper.getEntityManager().getTransaction().begin();
                 TestBeanManager.init(method, target, connectionHelper);
-
-                return super.withBefores(method, target, statement);
+                Statement result = super.withBefores(method, target, statement);
+                //dbunit;
+                connectionHelper.getEntityManager().flush();
+                connectionHelper.getEntityManager().getTransaction().rollback();
+                return result;
             }
 
             @Override

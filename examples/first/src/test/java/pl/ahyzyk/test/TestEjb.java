@@ -19,9 +19,12 @@ public class TestEjb {
 
     @Test
     public void firstTest() {
-
         easyEjb.testMe();
-        System.out.println(integer);
+    }
+
+    @Test
+    public void secoundTest() {
+        easyEjb.testMe();
     }
 
 }

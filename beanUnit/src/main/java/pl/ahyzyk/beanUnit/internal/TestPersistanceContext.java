@@ -80,8 +80,8 @@ public class TestPersistanceContext {
     }
 
     public static void close(ConnectionHelper connectionHelper) {
-        closeCloseable(() -> connectionHelper.getEntityManager().close());
-        closeCloseable(() -> connectionHelper.getEntityManagerFactory().close());
-        closeCloseable(() -> connectionHelper.getConnection().close());
+//        closeCloseable(() -> connectionHelper.getEntityManager().close());
+//        closeCloseable(() -> connectionHelper.getEntityManagerFactory().close());
+//        closeCloseable(() -> connectionHelper.getConnection().close());
     }
 }

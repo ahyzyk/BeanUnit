@@ -54,4 +54,7 @@ public class TestBean {
     }
 
 
+    public void setConstructed() {
+        this.constructed = true;
+    }
 }

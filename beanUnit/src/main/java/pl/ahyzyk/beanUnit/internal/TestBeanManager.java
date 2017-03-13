@@ -37,12 +37,11 @@ public class TestBeanManager {
         if (bean.isConstructed()) {
             return;
         }
-        System.out.println(bean.getObject());
         try {
-            findPostConstruct(bean.getObject(), bean.getObject().getClass());
-            bean.setConstructed(true);
+            findPostConstruct(bean.getSpy(), bean.getObject().getClass());
+            bean.setConstructed();
         } catch (Exception e) {
-            throw new RuntimeException("unable to call postContruct", e);
+            throw new RuntimeException("Error during postConstruct call", e);
         }
     }
 
@@ -57,7 +56,6 @@ public class TestBeanManager {
         for (Method method : aClass.getDeclaredMethods()) {
             if (isPostConstructAnnotationPresent(method)) {
                 method.setAccessible(true);
-                System.out.println("PostConstructs : " + method);
                 method.invoke(object, (Object[]) null);
             }
         }
@@ -76,7 +74,7 @@ public class TestBeanManager {
                 try {
                     field.set(object, findInjectObject(field).getBean());
                 } catch (Exception e) {
-                    throw new RuntimeException("error", e);
+                    throw new RuntimeException("Error during injecting bean into " + field.toString(), e);
                 }
             }
         }

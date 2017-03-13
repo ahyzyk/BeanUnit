@@ -8,10 +8,11 @@ import javax.ejb.Stateless;
 public class EasyEjb {
     @EJB
     private EasyEjb1 easyEjb1;
-
+    @EJB
+    private Table1Manager table1Manager;
     @PostConstruct
     private void postConstruct() {
-        System.out.println("Inited");
+        table1Manager.create(1L, this.getClass().getCanonicalName());
     }
 
 

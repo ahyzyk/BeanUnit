@@ -1,22 +1,20 @@
 package ejb;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 @Stateless
 public class EasyEjb1 extends EasyEjb2 {
-    @PersistenceContext
-    private EntityManager entityManager;
 
+    @EJB
+    private Table1Manager table1Manager;
     @PostConstruct
     private void postConstruct() {
-        System.out.println("postConstruct 1: " + getClass().getName());
+        table1Manager.create(2L, this.getClass().getCanonicalName());
     }
 
     public void testMe() {
-        System.out.println("testMe1 : " + getClass().getName());
-        System.out.println("testMe2 : " + entityManager.getClass());
+        table1Manager.create(4L, this.getClass().getCanonicalName());
     }
 }
