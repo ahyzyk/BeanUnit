@@ -24,6 +24,7 @@ public class TestBeanManager {
         beans.clear();
         initDefaultInjects(connectionHelper);
         analyzeFields(object, object.getClass());
+        
     }
 
     private static void initDefaultInjects(ConnectionHelper connectionHelper) {
