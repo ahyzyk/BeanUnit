@@ -7,44 +7,30 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
-import pl.ahyzyk.beanUnit.internal.TestBeanManager;
 import pl.ahyzyk.beanUnit.internal.TestPersistanceContext;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 
 public class TestRunner extends Runner {
-    private final File resourcesDirectory = new File("src/beanUnit/resources");
     private final BlockJUnit4ClassRunner runner;
-
+    private final TestExecutionListener listener;
+    private Object targetObject;
     private ConnectionHelper connectionHelper;
 
 
     public TestRunner(Class<?> klass) throws InvocationTargetException, InitializationError, InstantiationException, IllegalAccessException {
-
-        connectionHelper = TestPersistanceContext.init(klass);
-
+        listener = new TestExecutionListener(this);
         runner = new BlockJUnit4ClassRunner(klass) {
             protected Statement withBefores(FrameworkMethod method, Object target,
                                             Statement statement) {
+                targetObject = target;
+                connectionHelper = TestPersistanceContext.init(target.getClass());
 
-                connectionHelper.getEntityManager().getTransaction().begin();
-                TestBeanManager.init(method, target, connectionHelper);
-                Statement result = super.withBefores(method, target, statement);
-                //dbunit;
-                connectionHelper.getEntityManager().flush();
-                connectionHelper.getEntityManager().getTransaction().rollback();
-                return result;
-            }
-
-            @Override
-            protected Statement withAfterClasses(Statement statement) {
-                TestPersistanceContext.close(connectionHelper);
-                return super.withAfterClasses(statement);
+                return super.withBefores(method, target, statement);
             }
         };
+
     }
 
 
@@ -53,18 +39,17 @@ public class TestRunner extends Runner {
     }
 
     public void run(RunNotifier runNotifier) {
+        runNotifier.removeListener(listener);
+        runNotifier.addListener(listener);
         runner.run(runNotifier);
     }
 
-    public File getResourcesDirectory() {
-        return resourcesDirectory;
+
+    public ConnectionHelper getConnectionHelper() {
+        return connectionHelper;
     }
 
-    public File getResource(String resource) {
-        try {
-            return new File(resourcesDirectory.getCanonicalPath() + "/" + resource);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Object getObject() {
+        return targetObject;
     }
 }

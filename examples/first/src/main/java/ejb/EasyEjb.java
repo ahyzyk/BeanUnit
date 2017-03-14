@@ -12,7 +12,7 @@ public class EasyEjb {
     private Table1Manager table1Manager;
     @PostConstruct
     private void postConstruct() {
-        table1Manager.create(1L, this.getClass().getCanonicalName());
+        table1Manager.create(1L, this.getClass().getCanonicalName() + " postConstruct");
     }
 
 

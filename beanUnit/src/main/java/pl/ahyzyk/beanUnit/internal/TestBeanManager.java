@@ -1,11 +1,10 @@
 package pl.ahyzyk.beanUnit.internal;
 
-import org.junit.runners.model.FrameworkMethod;
 import pl.ahyzyk.beanUnit.ConnectionHelper;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
-import javax.ejb.PostActivate;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -14,60 +13,73 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
+import java.util.function.Function;
 
 
 public class TestBeanManager {
-    public static Map<Class, TestBean> beans = new HashMap<>();
+    private Map<Class, TestBean> beans = new HashMap<>();
+    private Stack<TestBean> constucted = new Stack<>();
+
+    public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter) throws InvocationTargetException, IllegalAccessException {
+        callMethod(object.getSpy(), object.getObject().getClass(), supperBeforeClass, filter);
+    }
+
+    public static void callMethod(Object object, Class<?> aClass, boolean supperBeforeClass, Function<Method, Boolean> filter) throws InvocationTargetException, IllegalAccessException {
+        if (aClass == Object.class) {
+            return;
+        }
+        if (supperBeforeClass) {
+            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter);
+        }
+
+        for (Method method : aClass.getDeclaredMethods()) {
+            if (filter.apply(method)) {
+                method.setAccessible(true);
+                method.invoke(object, (Object[]) null);
+            }
+        }
 
 
-    public static void init(FrameworkMethod method, Object object, ConnectionHelper connectionHelper) {
+        if (!supperBeforeClass) {
+            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter);
+        }
+
+
+    }
+
+    private static boolean isInjectAnnotationPresent(Field field) {
+        return field.isAnnotationPresent(Inject.class) || field.isAnnotationPresent(EJB.class) || field.isAnnotationPresent(PersistenceContext.class);
+    }
+
+    public void init(Object object, ConnectionHelper connectionHelper) {
         beans.clear();
         initDefaultInjects(connectionHelper);
         analyzeFields(object, object.getClass());
-        
+
     }
 
-    private static void initDefaultInjects(ConnectionHelper connectionHelper) {
-        beans.put(Integer.class, new TestBean(1, true));
-        beans.put(Long.class, new TestBean(1L, true));
-        beans.put(String.class, new TestBean("", true));
-        beans.put(EntityManager.class, new TestBean(connectionHelper.getEntityManager(), true));
+    private void initDefaultInjects(ConnectionHelper connectionHelper) {
+        beans.put(Integer.class, new TestBean(1));
+        beans.put(Long.class, new TestBean(1L));
+        beans.put(String.class, new TestBean(""));
+        beans.put(TestBeanManager.class, new TestBean(this));
+        beans.put(EntityManager.class, new TestBean(connectionHelper.getEntityManager()));
     }
 
-    public static void constructBean(TestBean bean) {
+    public void constructBean(TestBean bean) {
         if (bean.isConstructed()) {
             return;
         }
         try {
-            findPostConstruct(bean.getSpy(), bean.getObject().getClass());
+            callMethod(bean, true, m -> m.isAnnotationPresent(PostConstruct.class));
             bean.setConstructed();
         } catch (Exception e) {
             throw new RuntimeException("Error during postConstruct call", e);
         }
     }
 
-
-    private static void findPostConstruct(Object object, Class<?> aClass) throws InvocationTargetException, IllegalAccessException {
-        if (aClass == Object.class) {
-            return;
-        }
-
-        findPostConstruct(object, aClass.getSuperclass());
-
-        for (Method method : aClass.getDeclaredMethods()) {
-            if (isPostConstructAnnotationPresent(method)) {
-                method.setAccessible(true);
-                method.invoke(object, (Object[]) null);
-            }
-        }
-
-    }
-
-    private static boolean isPostConstructAnnotationPresent(Method method) {
-        return method.isAnnotationPresent(PostConstruct.class) || method.isAnnotationPresent(PostActivate.class);
-    }
-
-    private static void analyzeFields(Object object, Class clazz) {
+    public void analyzeFields(Object object, Class clazz) {
         for (Field field : clazz.getDeclaredFields()) {
 
             if (isInjectAnnotationPresent(field)) {
@@ -84,19 +96,31 @@ public class TestBeanManager {
         }
     }
 
-    private static boolean isInjectAnnotationPresent(Field field) {
-        return field.isAnnotationPresent(Inject.class) || field.isAnnotationPresent(EJB.class) || field.isAnnotationPresent(PersistenceContext.class);
-    }
-
-    private static TestBean findInjectObject(Field field) throws IllegalAccessException, InstantiationException {
+    private TestBean findInjectObject(Field field) throws IllegalAccessException, InstantiationException {
         Class clazz = field.getType();
 
         if (!beans.containsKey(clazz)) {
             Object result = clazz.newInstance();
-            TestBean bean = new TestBean(result);
+            TestBean bean = new TestBean(result, this);
             beans.put(clazz, bean);
             analyzeFields(bean.getSpy(), bean.getObject().getClass());
         }
         return beans.get(clazz);
+    }
+
+    public void destory() {
+        while (!constucted.isEmpty()) {
+            TestBean bean = constucted.pop();
+            try {
+                callMethod(bean, false, m -> m.isAnnotationPresent(PreDestroy.class));
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to call PreDestroy " + bean.getObject().getClass());
+            }
+        }
+    }
+
+
+    public void addConstucted(TestBean testBean) {
+        constucted.add(testBean);
     }
 }

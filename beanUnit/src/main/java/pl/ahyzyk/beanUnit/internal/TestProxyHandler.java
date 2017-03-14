@@ -13,7 +13,7 @@ public class TestProxyHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        TestBeanManager.constructBean(bean);
+        bean.constructBean();
         return method.invoke(bean.getSpy(), args);
     }
 }

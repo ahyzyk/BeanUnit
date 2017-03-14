@@ -12,10 +12,19 @@ public class Table1Manager {
     private EntityManager entityManager;
 
     public void create(Long id, String value) {
+
         Table1 tb1 = new Table1();
         tb1.setId(id);
         tb1.setValue(value);
         entityManager.persist(tb1);
+
+    }
+
+    public void show() {
+
+        System.out.println("Table1:");
+        entityManager.createQuery("select t from Table1 t", Table1.class).getResultList()
+                .stream().forEach(t -> System.out.println(t.toString()));
 
     }
 }

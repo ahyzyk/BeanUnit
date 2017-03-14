@@ -19,15 +19,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-
+//TODO : obsługa persistance context z parametrem
+//TODO : zmiana konfiguracji - domyślne connection - jeśli jedno nie wymaga dodawnia connectionHelpera
 public class TestPersistanceContext {
 
 
-    public static ConnectionHelper init(Class<?> klass) throws IllegalAccessException, InstantiationException {
+    public static ConnectionHelper init(Class<?> klass) {
         if (klass.isAnnotationPresent(TestConfiguration.class)) {
-            ConnectionHelper params = klass.getAnnotation(TestConfiguration.class).connectionHelper().newInstance();
-            try {
 
+            try {
+                ConnectionHelper params = klass.getAnnotation(TestConfiguration.class).connectionHelper().newInstance();
 //                conn = DriverManager.getConnection(params.url());
 
                 PersistenceProvider provider = findProvider(klass.getClassLoader().getResourceAsStream("META-INF/persistence.xml"), params.getPersistanceUnitName());

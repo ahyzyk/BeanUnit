@@ -7,31 +7,32 @@ import static org.mockito.Mockito.spy;
 
 public class TestBean {
     private final Object spy;
+    private final TestBeanManager manager;
     private Object object;
     private Object bean;
     private boolean constructed;
 
-    public TestBean(Object object) {
+    public TestBean(Object object, TestBeanManager manager) {
         this.object = object;
         this.spy = spy(object);
         constructed = false;
+        this.manager = manager;
         createBean();
     }
 
-    public TestBean(Object object, boolean constructed) {
+    public TestBean(Object object) {
         this.object = object;
         this.spy = object;
-        this.constructed = constructed;
+        this.constructed = true;
+        this.manager = null;
         bean = object;
     }
 
     private void createBean() {
-
         Enhancer e = new Enhancer();
         e.setSuperclass(object.getClass());
         e.setClassLoader(object.getClass().getClassLoader());
         e.setCallback(new TestProxyHandler(this));
-
         bean = e.create();
     }
 
@@ -55,6 +56,11 @@ public class TestBean {
 
 
     public void setConstructed() {
+        manager.addConstucted(this);
         this.constructed = true;
+    }
+
+    public void constructBean() {
+        manager.constructBean(this);
     }
 }

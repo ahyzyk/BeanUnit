@@ -25,4 +25,12 @@ public class Table1 {
     public void setValue(String value) {
         this.value = value;
     }
+
+    @Override
+    public String toString() {
+        return "Table1{" +
+                "id=" + id +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }
