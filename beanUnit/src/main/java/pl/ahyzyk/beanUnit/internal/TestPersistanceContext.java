@@ -4,11 +4,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import pl.ahyzyk.beanUnit.ConnectionHelper;
 import pl.ahyzyk.beanUnit.TestConfiguration;
 import pl.ahyzyk.beanUnit.utils.ErrorConsumer;
 
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -23,44 +21,51 @@ import java.util.function.Consumer;
 //TODO : zmiana konfiguracji - domyślne connection - jeśli jedno nie wymaga dodawnia connectionHelpera
 public class TestPersistanceContext {
 
+    Map<String, TestProvider> providerMap = new HashMap<>();
 
-    public static ConnectionHelper init(Class<?> klass) {
-        if (klass.isAnnotationPresent(TestConfiguration.class)) {
 
-            try {
-                ConnectionHelper params = klass.getAnnotation(TestConfiguration.class).connectionHelper().newInstance();
-//                conn = DriverManager.getConnection(params.url());
+    public static TestPersistanceContext init(Class<?> klass) {
 
-                PersistenceProvider provider = findProvider(klass.getClassLoader().getResourceAsStream("META-INF/persistence.xml"), params.getPersistanceUnitName());
-                EntityManagerFactory factory = provider.createEntityManagerFactory(params.getPersistanceUnitName(), params.getParamenters());
-                params.setEntityManagerFactory(factory);
-                return params;
-            } catch (Exception ex) {
-                throw new RuntimeException("Unable to init connection", ex);
-            }
+        TestPersistanceContext result = new TestPersistanceContext();
 
+        Map<String, PersistenceProvider> providers;
+        try {
+            providers = findProviders(klass.getClassLoader().getResourceAsStream("META-INF/persistence.xml"));
+        } catch (Exception e) {
+            throw new RuntimeException("Error during reading persistance.xml", e);
         }
-        return new EmptyConnectionHelper();
+
+
+        Map<String, String> params = new HashMap<>();
+        providers.entrySet().forEach(es -> result.providerMap.put(es.getKey(), new TestProvider(es.getKey(), es.getValue(), params)));
+        if (klass.isAnnotationPresent(TestConfiguration.class)) {
+            String key = klass.getAnnotation(TestConfiguration.class).persistanceUntiName();
+            result.providerMap.put("", result.providerMap.get(key));
+        }
+
+        return result;
     }
 
-    private static PersistenceProvider findProvider(InputStream resource, String persistanceName) throws ClassNotFoundException, IllegalAccessException, InstantiationException, ParserConfigurationException, IOException, SAXException {
+    private static Map<String, PersistenceProvider> findProviders(InputStream resource) throws ClassNotFoundException, IllegalAccessException, InstantiationException, ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(resource);
-        Map<String, String> providers = new HashMap<>();
+        Map<String, PersistenceProvider> providers = new HashMap<>();
         NodeList childs = doc.getDocumentElement().getChildNodes();
         findNode(childs, "persistence-unit", t ->
                 findNode(t.getChildNodes(), "provider", t2 ->
-                        providers.put(t.getAttributes().getNamedItem("name").getNodeValue(), t2.getTextContent().trim())
+                        providers.put(t.getAttributes().getNamedItem("name").getNodeValue(),
+                                createPersistenceProvider(t2.getTextContent().trim()))
                 ));
-        String className;
-        if (providers.size() == 1) {
-            className = (String) providers.values().toArray()[0];
-        } else {
-            className = providers.get(persistanceName);
-        }
+        return providers;
+    }
 
-        return (PersistenceProvider) Class.forName(className).newInstance();
+    private static PersistenceProvider createPersistenceProvider(String className) {
+        try {
+            return (PersistenceProvider) Class.forName(className).newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to create instance for provider " + className, e);
+        }
     }
 
     private static void findNode(NodeList nodeList, String node, Consumer<Node> consumer) {
@@ -80,9 +85,13 @@ public class TestPersistanceContext {
         }
     }
 
-    public static void close(ConnectionHelper connectionHelper) {
-//        closeCloseable(() -> connectionHelper.getEntityManager().close());
-//        closeCloseable(() -> connectionHelper.getEntityManagerFactory().close());
-//        closeCloseable(() -> connectionHelper.getConnection().close());
+
+    public void begin() {
+        providerMap.values().stream().forEach(p -> p.begin());
     }
+
+    public void end() {
+        providerMap.values().stream().forEach(p -> p.end());
+    }
+
 }

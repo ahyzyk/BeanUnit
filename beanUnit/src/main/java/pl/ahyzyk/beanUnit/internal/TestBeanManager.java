@@ -1,25 +1,22 @@
 package pl.ahyzyk.beanUnit.internal;
 
-import pl.ahyzyk.beanUnit.ConnectionHelper;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 import java.util.function.Function;
 
 
 public class TestBeanManager {
-    private Map<Class, TestBean> beans = new HashMap<>();
+
+    private BeanManager beanManager = new BeanManager();
     private Stack<TestBean> constucted = new Stack<>();
+    private TestPersistanceContext persistanceContext;
 
     public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter) throws InvocationTargetException, IllegalAccessException {
         callMethod(object.getSpy(), object.getObject().getClass(), supperBeforeClass, filter);
@@ -52,19 +49,19 @@ public class TestBeanManager {
         return field.isAnnotationPresent(Inject.class) || field.isAnnotationPresent(EJB.class) || field.isAnnotationPresent(PersistenceContext.class);
     }
 
-    public void init(Object object, ConnectionHelper connectionHelper) {
-        beans.clear();
-        initDefaultInjects(connectionHelper);
+    public void init(Object object) {
+        beanManager.clear();
+        constucted.clear();
+        initDefaultInjects();
         analyzeFields(object, object.getClass());
 
     }
 
-    private void initDefaultInjects(ConnectionHelper connectionHelper) {
-        beans.put(Integer.class, new TestBean(1));
-        beans.put(Long.class, new TestBean(1L));
-        beans.put(String.class, new TestBean(""));
-        beans.put(TestBeanManager.class, new TestBean(this));
-        beans.put(EntityManager.class, new TestBean(connectionHelper.getEntityManager()));
+    private void initDefaultInjects() {
+        beanManager.add(Integer.class, new TestBean(1));
+        beanManager.add(Long.class, new TestBean(1L));
+        beanManager.add(String.class, new TestBean(""));
+        beanManager.add(BeanManager.class, new TestBean(beanManager));
     }
 
     public void constructBean(TestBean bean) {
@@ -84,10 +81,12 @@ public class TestBeanManager {
 
             if (isInjectAnnotationPresent(field)) {
                 field.setAccessible(true);
-                try {
-                    field.set(object, findInjectObject(field).getBean());
-                } catch (Exception e) {
-                    throw new RuntimeException("Error during injecting bean into " + field.toString(), e);
+                if (field.isAnnotationPresent(PersistenceContext.class)) {
+                    PersistenceContext persistanceAnnotation = field.getAnnotation(PersistenceContext.class);
+                    inject(field, object, persistanceContext.providerMap.get(persistanceAnnotation.name()).getEntityManager());
+                } else {
+                    injectObject(object, field);
+
                 }
             }
         }
@@ -96,16 +95,35 @@ public class TestBeanManager {
         }
     }
 
+
+    private void injectObject(Object object, Field field) {
+        try {
+            Object beanObject = findInjectObject(field).getBean();
+            inject(field, object, beanObject);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error during searching bean field:" + field, ex);
+        }
+
+    }
+
+    private void inject(Field field, Object object, Object beanObject) {
+        try {
+            field.set(object, beanObject);
+        } catch (Exception e) {
+            throw new RuntimeException("Error during injecting bean into " + field.toString(), e);
+        }
+    }
+
     private TestBean findInjectObject(Field field) throws IllegalAccessException, InstantiationException {
         Class clazz = field.getType();
 
-        if (!beans.containsKey(clazz)) {
+        if (beanManager.get(clazz) == null) {
             Object result = clazz.newInstance();
             TestBean bean = new TestBean(result, this);
-            beans.put(clazz, bean);
+            beanManager.add(clazz, bean);
             analyzeFields(bean.getSpy(), bean.getObject().getClass());
         }
-        return beans.get(clazz);
+        return beanManager.get(clazz);
     }
 
     public void destory() {
@@ -122,5 +140,19 @@ public class TestBeanManager {
 
     public void addConstucted(TestBean testBean) {
         constucted.add(testBean);
+    }
+
+    public void beginTransaction() {
+        persistanceContext.begin();
+
+    }
+
+    public void endTransaction() {
+        persistanceContext.end();
+
+    }
+
+    public void setPersistanceContext(TestPersistanceContext persistanceContext) {
+        this.persistanceContext = persistanceContext;
     }
 }

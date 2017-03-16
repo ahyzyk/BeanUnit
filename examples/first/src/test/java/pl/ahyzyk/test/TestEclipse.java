@@ -6,6 +6,6 @@ import pl.ahyzyk.beanUnit.TestRunner;
 
 
 @RunWith(TestRunner.class)
-@TestConfiguration(connectionHelper = EclipseConnection.class)
+@TestConfiguration(persistanceUntiName = "H2-eclipse")
 public class TestEclipse extends TestEjb {
 }
