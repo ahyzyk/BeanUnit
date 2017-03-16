@@ -3,8 +3,6 @@ Easy unit testing for CDI beans.
 
 TODO: 
 
-@PreDestroy
-
 @Remote, @Local - 
 https://github.com/ronmamo/reflections
 
@@ -21,7 +19,3 @@ Timer Service
 
 @Resource
 
-
-allow to execute
-    @PostActivate
-    @PrePasivate

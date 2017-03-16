@@ -17,8 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-//TODO : obsługa persistance context z parametrem
-//TODO : zmiana konfiguracji - domyślne connection - jeśli jedno nie wymaga dodawnia connectionHelpera
 public class TestPersistanceContext {
 
     Map<String, TestProvider> providerMap = new HashMap<>();
@@ -38,19 +36,29 @@ public class TestPersistanceContext {
 
         Map<String, String> params = new HashMap<>();
         providers.entrySet().forEach(es -> result.providerMap.put(es.getKey(), new TestProvider(es.getKey(), es.getValue(), params)));
-        if (klass.isAnnotationPresent(TestConfiguration.class)) {
-            String key = klass.getAnnotation(TestConfiguration.class).persistanceUntiName();
-            result.providerMap.put("", result.providerMap.get(key));
+        if (result.providerMap.size() > 0) {
+            String defaultPersistance = "";
+            if (klass.isAnnotationPresent(TestConfiguration.class)) {
+                defaultPersistance = klass.getAnnotation(TestConfiguration.class).persistanceUntiName();
+            }
+            if (defaultPersistance.length() == 0) {
+                defaultPersistance = result.providerMap.keySet().stream().findFirst().get();
+            }
+            result.providerMap.put("", result.providerMap.get(defaultPersistance));
         }
 
         return result;
     }
 
     private static Map<String, PersistenceProvider> findProviders(InputStream resource) throws ClassNotFoundException, IllegalAccessException, InstantiationException, ParserConfigurationException, IOException, SAXException {
+        Map<String, PersistenceProvider> providers = new HashMap<>();
+        if (resource == null) {
+            return providers;
+        }
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(resource);
-        Map<String, PersistenceProvider> providers = new HashMap<>();
+
         NodeList childs = doc.getDocumentElement().getChildNodes();
         findNode(childs, "persistence-unit", t ->
                 findNode(t.getChildNodes(), "provider", t2 ->
