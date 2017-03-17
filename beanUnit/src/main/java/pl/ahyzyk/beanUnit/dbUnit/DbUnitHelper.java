@@ -5,7 +5,6 @@ import org.dbunit.dataset.xml.FlatXmlProducer;
 import org.junit.runners.model.FrameworkMethod;
 import org.xml.sax.InputSource;
 import pl.ahyzyk.beanUnit.annotations.ClearTable;
-import pl.ahyzyk.beanUnit.annotations.DataSetDirectory;
 import pl.ahyzyk.beanUnit.annotations.ShouldMatchDataSet;
 import pl.ahyzyk.beanUnit.annotations.UsingDataSet;
 import pl.ahyzyk.beanUnit.internal.TestPersistanceContext;
@@ -19,8 +18,6 @@ import java.lang.annotation.Annotation;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertTrue;
-
 /**
  * Created by andrz on 17.03.2017.
  */
@@ -28,27 +25,13 @@ public class DbUnitHelper {
     private final static Logger LOGGER = Logger.getLogger(DbUnitHelper.class.getName());
     private final Class klass;
     private final TestPersistanceContext persistanceContext;
-    private boolean inited = false;
 
-    private DataSetDirectory dataSetDirectory;
 
     public DbUnitHelper(Class klass, TestPersistanceContext persistanceContext) {
         this.klass = klass;
         this.persistanceContext = persistanceContext;
-        findDirectory(klass);
-        if (inited) {
-            LOGGER.info(String.format("DbUnitDirectory is set for %s", klass.getName()));
-        }
-    }
 
-    private void findDirectory(Class clazz) {
-        if (clazz == Object.class) {
-            return;
-        }
-        if (klass.isAnnotationPresent(DataSetDirectory.class)) {
-            inited = true;
-            dataSetDirectory = (DataSetDirectory) klass.getAnnotation(DataSetDirectory.class);
-        }
+
     }
 
 
@@ -77,8 +60,6 @@ public class DbUnitHelper {
     private <T extends Object> void runAnnottation(FrameworkMethod method, Class annotation, BiExceptionConsumer<FrameworkMethod, T> consumer) {
         T config = (T) method.getAnnotation(annotation);
         if (config != null) {
-            checkInit();
-
             try {
                 consumer.accept(method, config);
             } catch (Exception e) {
@@ -87,10 +68,6 @@ public class DbUnitHelper {
         }
     }
 
-
-    private void checkInit() {
-        assertTrue("DataSetDirectory should be added to class", inited);
-    }
 
     private void shouldMatchDataSet(FrameworkMethod method, ShouldMatchDataSet annotation) {
     }
@@ -115,7 +92,15 @@ public class DbUnitHelper {
 
     private void usingDataSet(FrameworkMethod method, UsingDataSet annotation) throws DataSetException, IllegalAccessException, InstantiationException {
         EntityManager entityManager = persistanceContext.get();
-        InputStream stream = this.getClass().getClassLoader().getResourceAsStream("datasets/testEjb/test1.xml");
+        for (String file : annotation.value()) {
+            loadData(entityManager, file);
+        }
+
+
+    }
+
+    private void loadData(EntityManager entityManager, String file) throws DataSetException {
+        InputStream stream = this.getClass().getClassLoader().getResourceAsStream(file);
         FlatXmlProducer producer = new FlatXmlProducer(new InputSource(stream));
         IDataSet dataSet = new CachedDataSet(producer);
         for (String table : dataSet.getTableNames()) {
@@ -135,7 +120,6 @@ public class DbUnitHelper {
             sql += columns.substring(0, columns.length() - 1) + ") values (" + values.substring(0, values.length() - 1) + ")";
 
             Query query = entityManager.createNativeQuery(sql);
-            System.out.println(sql);
             for (int row = 0; row < data.getRowCount(); row++) {
                 int i = 1;
                 for (Column column : data.getTableMetaData().getColumns()) {
@@ -145,10 +129,7 @@ public class DbUnitHelper {
                 query.executeUpdate();
             }
             entityManager.flush();
-
         }
-
-
     }
 
 }

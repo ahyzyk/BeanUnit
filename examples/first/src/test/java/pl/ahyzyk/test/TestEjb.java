@@ -46,7 +46,7 @@ public class TestEjb {
     }
 
     @Test
-    @UsingDataSet
+    @UsingDataSet("datasets/testEjb/test1.xml")
     @ClearTable("Table1")
     public void test1() {
         easyEjb.testMe();
