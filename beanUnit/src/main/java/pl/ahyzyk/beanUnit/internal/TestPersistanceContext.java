@@ -5,8 +5,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import pl.ahyzyk.beanUnit.TestConfiguration;
-import pl.ahyzyk.beanUnit.utils.ErrorConsumer;
 
+import javax.persistence.EntityManager;
 import javax.persistence.spi.PersistenceProvider;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -85,15 +85,6 @@ public class TestPersistanceContext {
         }
     }
 
-    private static void closeCloseable(ErrorConsumer consumer) {
-        try {
-            consumer.accept();
-        } catch (Exception ex) {
-            //ignore error
-        }
-    }
-
-
     public void begin() {
         providerMap.values().stream().forEach(p -> p.begin());
     }
@@ -102,4 +93,16 @@ public class TestPersistanceContext {
         providerMap.values().stream().forEach(p -> p.end());
     }
 
+    public void close() {
+        providerMap.values().stream().forEach(p -> p.close());
+    }
+
+    public EntityManager get(String s) {
+        return providerMap.get(s).getEntityManager();
+    }
+
+
+    public EntityManager get() {
+        return get("");
+    }
 }

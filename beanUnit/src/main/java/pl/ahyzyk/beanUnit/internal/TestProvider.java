@@ -42,7 +42,17 @@ public class TestProvider {
     public void end() {
         if (used) {
             used = false;
-            entityManager.getTransaction().rollback();
+            entityManager.getTransaction().commit();
         }
+    }
+
+    public void close() {
+        if (entityManager != null && entityManager.isOpen()) {
+            entityManager.close();
+        }
+    }
+
+    public PersistenceProvider getProvider() {
+        return provider;
     }
 }

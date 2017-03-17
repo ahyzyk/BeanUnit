@@ -83,7 +83,7 @@ public class TestBeanManager {
                 field.setAccessible(true);
                 if (field.isAnnotationPresent(PersistenceContext.class)) {
                     PersistenceContext persistanceAnnotation = field.getAnnotation(PersistenceContext.class);
-                    inject(field, object, persistanceContext.providerMap.get(persistanceAnnotation.name()).getEntityManager());
+                    inject(field, object, persistanceContext.get(persistanceAnnotation.unitName()));
                 } else {
                     injectObject(object, field);
 
@@ -152,7 +152,15 @@ public class TestBeanManager {
 
     }
 
+    public TestPersistanceContext getPersistanceContext() {
+        return persistanceContext;
+    }
+
     public void setPersistanceContext(TestPersistanceContext persistanceContext) {
         this.persistanceContext = persistanceContext;
+    }
+
+    public void closeEntityManagers() {
+        persistanceContext.close();
     }
 }
