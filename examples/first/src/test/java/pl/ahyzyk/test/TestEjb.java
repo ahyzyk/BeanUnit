@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import pl.ahyzyk.beanUnit.annotations.ClearTable;
-import pl.ahyzyk.beanUnit.annotations.DataSetDirectory;
 import pl.ahyzyk.beanUnit.annotations.UsingDataSet;
 import pl.ahyzyk.beanUnit.internal.BeanManager;
 
@@ -20,7 +19,7 @@ import static org.mockito.Mockito.verify;
 
 
 @Ignore
-@DataSetDirectory("datasets/testEjb")
+
 public class TestEjb {
     @EJB
     private EasyEjb easyEjb;
