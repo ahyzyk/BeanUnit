@@ -1,5 +1,7 @@
 package pl.ahyzyk.beanUnit.internal;
 
+import pl.ahyzyk.beanUnit.annotations.BeanImplementations;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
@@ -18,28 +20,28 @@ public class TestBeanManager {
     private Stack<TestBean> constucted = new Stack<>();
     private TestPersistanceContext persistanceContext;
 
-    public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter) throws InvocationTargetException, IllegalAccessException {
-        callMethod(object.getSpy(), object.getObject().getClass(), supperBeforeClass, filter);
+    public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
+        callMethod(object.getSpy(), object.getObject().getClass(), supperBeforeClass, filter, parameters);
     }
 
-    public static void callMethod(Object object, Class<?> aClass, boolean supperBeforeClass, Function<Method, Boolean> filter) throws InvocationTargetException, IllegalAccessException {
+    public static void callMethod(Object object, Class<?> aClass, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
         if (aClass == Object.class) {
             return;
         }
         if (supperBeforeClass) {
-            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter);
+            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter, parameters);
         }
 
         for (Method method : aClass.getDeclaredMethods()) {
             if (filter.apply(method)) {
                 method.setAccessible(true);
-                method.invoke(object, (Object[]) null);
+                method.invoke(object, parameters);
             }
         }
 
 
         if (!supperBeforeClass) {
-            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter);
+            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter, parameters);
         }
 
 
@@ -53,8 +55,18 @@ public class TestBeanManager {
         beanManager.clear();
         constucted.clear();
         initDefaultInjects();
+        initImplementations(object);
+
         analyzeFields(object, object.getClass());
 
+    }
+
+    private void initImplementations(Object object) {
+        try {
+            callMethod(object, object.getClass(), true, m -> m.isAnnotationPresent(BeanImplementations.class), new Object[]{beanManager});
+        } catch (Throwable e) {
+            new RuntimeException("Error during loading implementations", e);
+        }
     }
 
     private void initDefaultInjects() {
@@ -69,7 +81,7 @@ public class TestBeanManager {
             return;
         }
         try {
-            callMethod(bean, true, m -> m.isAnnotationPresent(PostConstruct.class));
+            callMethod(bean, true, m -> m.isAnnotationPresent(PostConstruct.class), null);
             bean.setConstructed();
         } catch (Exception e) {
             throw new RuntimeException("Error during postConstruct call", e);
@@ -118,7 +130,8 @@ public class TestBeanManager {
         Class clazz = field.getType();
 
         if (beanManager.get(clazz) == null) {
-            Object result = clazz.newInstance();
+            Class implementation = beanManager.getImplementation(clazz);
+            Object result = implementation.newInstance();
             TestBean bean = new TestBean(result, this);
             beanManager.add(clazz, bean);
             analyzeFields(bean.getSpy(), bean.getObject().getClass());
@@ -130,7 +143,7 @@ public class TestBeanManager {
         while (!constucted.isEmpty()) {
             TestBean bean = constucted.pop();
             try {
-                callMethod(bean, false, m -> m.isAnnotationPresent(PreDestroy.class));
+                callMethod(bean, false, m -> m.isAnnotationPresent(PreDestroy.class), null);
             } catch (Exception e) {
                 throw new RuntimeException("Unable to call PreDestroy " + bean.getObject().getClass());
             }

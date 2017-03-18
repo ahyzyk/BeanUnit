@@ -2,14 +2,14 @@ package pl.ahyzyk.test;
 
 
 import ejb.EasyEjb;
+import ejb.EasyEjb3;
+import ejb.IEasyEjb3;
 import ejb.Table1Manager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import pl.ahyzyk.beanUnit.annotations.ClearTable;
-import pl.ahyzyk.beanUnit.annotations.ShouldMatchDataSet;
-import pl.ahyzyk.beanUnit.annotations.UsingDataSet;
+import pl.ahyzyk.beanUnit.annotations.*;
 import pl.ahyzyk.beanUnit.internal.BeanManager;
 
 import javax.ejb.EJB;
@@ -41,11 +41,27 @@ public class TestEjb {
         System.out.println("Before");
     }
 
-
     @After
     public void after() {
         System.out.println("After");
     }
+
+    @AfterWithDB
+    public void afterWithDB() {
+        System.out.println("afterWithDB");
+    }
+
+
+    @BeforeWithDB
+    public void beforeWithDB() {
+        System.out.println("beforeWithDB");
+    }
+
+    @BeanImplementations
+    public void implement(BeanManager beanManager) {
+        beanManager.addImplementation(IEasyEjb3.class, EasyEjb3.class);
+    }
+
 
     @Test
     @ClearTable("Table1")

@@ -9,6 +9,10 @@ import javax.ejb.Stateless;
 public class EasyEjb {
     @EJB
     private EasyEjb1 easyEjb1;
+
+    @EJB
+    private IEasyEjb3 easyEjb3;
+
     @EJB
     private Table1Manager table1Manager;
     @PostConstruct

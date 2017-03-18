@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public class BeanManager {
     private Map<Class, TestBean> beans = new HashMap<>();
-
+    private Map<Class, Class> implementations = new HashMap<>();
     protected void clear() {
         beans.clear();
     }
@@ -26,5 +26,18 @@ public class BeanManager {
         return (T) beans.get(klass).getSpy();
     }
 
+    public void addImplementation(Class interfaceClass, Class implementationClass) {
+        if (!interfaceClass.isAssignableFrom(implementationClass)) {
+            throw new RuntimeException(String.format("%s not implementing %s", implementationClass.getCanonicalName(), interfaceClass.getCanonicalName()));
+        }
+        implementations.put(interfaceClass, implementationClass);
+    }
 
+    public Class getImplementation(Class interfaceClass) {
+        if (implementations.containsKey(interfaceClass)) {
+            return implementations.get(interfaceClass);
+        } else {
+            return interfaceClass;
+        }
+    }
 }
