@@ -19,9 +19,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 
-//TODO Producenci dla interfejsów
-//TODO Podłączyć się po oracle
-
 @Ignore
 public class TestEjb {
     @EJB
@@ -46,16 +43,13 @@ public class TestEjb {
         System.out.println("After");
     }
 
-    @AfterWithDB
+    @AfterDBTest
     public void afterWithDB() {
         System.out.println("afterWithDB");
     }
 
 
-    @BeforeWithDB
-    public void beforeWithDB() {
-        System.out.println("beforeWithDB");
-    }
+
 
     @BeanImplementations
     public void implement(BeanManager beanManager) {
@@ -96,7 +90,7 @@ public class TestEjb {
 
     @Test
     @UsingDataSet("datasets/testEjb/test1.xml")
-    @ShouldMatchDataSet("datasets/testEjb/test1.xml")
+    @ShouldMatchDataSet(value = "datasets/testEjb/test1.xml", ordered = true)
     public void test3ExpectedValid() {
         //ok import/export should be the same
     }

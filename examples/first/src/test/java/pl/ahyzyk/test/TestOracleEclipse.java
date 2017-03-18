@@ -6,6 +6,6 @@ import pl.ahyzyk.beanUnit.TestRunner;
 
 
 @RunWith(TestRunner.class)
-@TestConfiguration(persistanceUntiName = "H2-hibernate")
-public class TestHibernate extends TestEjb {
+@TestConfiguration(persistanceUntiName = "Oracle-eclipse")
+public class TestOracleEclipse extends TestEjb {
 }

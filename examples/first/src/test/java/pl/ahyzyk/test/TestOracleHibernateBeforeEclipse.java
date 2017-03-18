@@ -7,5 +7,5 @@ import pl.ahyzyk.beanUnit.TestRunner;
 
 @RunWith(TestRunner.class)
 @TestConfiguration(persistanceUntiName = "H2-eclipse")
-public class TestEclipse extends TestEjb {
+public class TestOracleHibernateBeforeEclipse extends TestEjb {
 }

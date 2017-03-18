@@ -15,6 +15,7 @@ public class TestProvider {
     private final Map<String, String> params;
     private boolean used = false;
     private EntityManager entityManager = null;
+    private boolean error = false;
 
     public TestProvider(String key, PersistenceProvider value, Map<String, String> params) {
         this.persistanceName = key;
@@ -24,10 +25,18 @@ public class TestProvider {
 
     public EntityManager getEntityManager() {
         used = true;
-        if (entityManager == null) {
-            entityManager = provider.createEntityManagerFactory(persistanceName, params).createEntityManager();
+        if (error) {
+            throw new RuntimeException("Error during getting entity manager");
         }
-        return entityManager;
+        try {
+            if (entityManager == null) {
+                entityManager = provider.createEntityManagerFactory(persistanceName, params).createEntityManager();
+            }
+            return entityManager;
+        } catch (Throwable e) {
+            error = true;
+            throw e;
+        }
     }
 
 

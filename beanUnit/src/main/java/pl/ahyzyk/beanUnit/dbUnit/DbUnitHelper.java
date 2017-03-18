@@ -139,8 +139,8 @@ public class DbUnitHelper {
                     String[] columns = tableInfo.getColumnList().toArray(new String[]{});
                     SortedTable expected = new SortedTable(matchTable, columns);
                     SortedTable actual = new SortedTable(result, expected.getTableMetaData());
-                    printTable(expected);
-                    printTable(actual);
+//                    printTable(expected);
+//                    printTable(actual);
                     assertEquals(expected, actual);
                 } else {
                     assertEquals(matchTable, result);

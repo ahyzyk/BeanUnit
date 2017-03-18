@@ -11,6 +11,7 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
+import pl.ahyzyk.beanUnit.annotations.AfterDBTest;
 import pl.ahyzyk.beanUnit.dbUnit.DbUnitHelper;
 import pl.ahyzyk.beanUnit.internal.TestBeanManager;
 import pl.ahyzyk.beanUnit.internal.TestPersistanceContext;
@@ -75,9 +76,10 @@ public class TestRunner extends BlockJUnit4ClassRunner {
 
             }
 
-            private void onFinish() {
+            private void onFinish() throws InvocationTargetException, IllegalAccessException {
                 tryToExecute("Destroy beans", eachNotifier, beanManager::destroy);
                 tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterMethod(currentMethod));
+                TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBTest.class), null);
             }
 
             private void onFinishFinally() {
@@ -86,12 +88,14 @@ public class TestRunner extends BlockJUnit4ClassRunner {
                 System.out.println("Ending test : " + currentMethod.getName());
             }
 
-            private void onStart() {
+            private void onStart() throws InvocationTargetException, IllegalAccessException {
                 System.out.println("Starting: " + currentMethod.getName());
                 System.out.println("Initialize beans");
                 beanManager.init(targetObject);
                 beanManager.beginTransaction();
                 tryToExecute("DbUnit before method ", currentNotifier, () -> dbUnitHelper.beforeMethod(currentMethod));
+
+
             }
 
             @Override

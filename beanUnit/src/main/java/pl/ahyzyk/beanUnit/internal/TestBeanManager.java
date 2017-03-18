@@ -112,6 +112,7 @@ public class TestBeanManager {
         try {
             Object beanObject = findInjectObject(field).getBean();
             inject(field, object, beanObject);
+
         } catch (Exception ex) {
             throw new RuntimeException("Error during searching bean field:" + field, ex);
         }

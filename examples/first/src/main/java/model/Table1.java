@@ -10,9 +10,9 @@ public class Table1 {
     @Id
     @Column(name = "ID")
     private Long id;
-
+    @Column(name = "VALUE")
     private String value;
-
+    @Column(name = "DATA")
     private Date date;
 
     public Long getId() {
