@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import pl.ahyzyk.beanUnit.annotations.ClearTable;
+import pl.ahyzyk.beanUnit.annotations.ShouldMatchDataSet;
 import pl.ahyzyk.beanUnit.annotations.UsingDataSet;
 import pl.ahyzyk.beanUnit.internal.BeanManager;
 
@@ -18,8 +19,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 
-@Ignore
+//TODO Producenci dla interfejsów
+//TODO Podłączyć się po oracle
 
+@Ignore
 public class TestEjb {
     @EJB
     private EasyEjb easyEjb;
@@ -45,34 +48,49 @@ public class TestEjb {
     }
 
     @Test
+    @ClearTable("Table1")
     @UsingDataSet("datasets/testEjb/test1.xml")
-    @ClearTable("Table1")
-    public void test1() {
+    @ShouldMatchDataSet("datasets/testEjb/test1.xml")
+    public void test1ExpectedError() {
+        //error database changed by bean
         easyEjb.testMe();
         table1Manager.show();
     }
 
     @Test
+    @UsingDataSet("datasets/testEjb/test1.xml")
+    @ShouldMatchDataSet("datasets/testEjb/test1_result.xml")
     @ClearTable("Table1")
-    public void test2() {
+    public void test2NotSortedExpectedError() {
+        //error result not sorted
         easyEjb.testMe();
         table1Manager.show();
     }
 
     @Test
+    @UsingDataSet("datasets/testEjb/test1.xml")
+    @ShouldMatchDataSet(value = "datasets/testEjb/test1_result.xml", ordered = true)
     @ClearTable("Table1")
-    public void test3() {
+    public void test2SortedExpectedValid() {
+        //ok result sorted
         easyEjb.testMe();
         table1Manager.show();
     }
 
+
+    @Test
+    @UsingDataSet("datasets/testEjb/test1.xml")
+    @ShouldMatchDataSet("datasets/testEjb/test1.xml")
+    public void test3ExpectedValid() {
+        //ok import/export should be the same
+    }
+
     @Test
     @ClearTable("Table1")
-    public void test4() {
-
+    public void test4ExpectedValid() {
+        //execute bean with mockito test on bean
         easyEjb.testMe();
         table1Manager.show();
-
         verify(beanManager.getSpy(EasyEjb.class), times(1)).testMe();
     }
 

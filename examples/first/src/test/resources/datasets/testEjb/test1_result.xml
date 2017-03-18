@@ -1,0 +1,12 @@
+<dataset>
+    <TABLE1 ID="8" VALUE="2" date="2016-03-03"/>
+    <TABLE1 ID="9" date="2016-03-03"/>
+    <TABLE1 ID="1" VALUE="EasyEjb postConstruct"/>
+    <TABLE1 ID="2" VALUE="EasyEjb preDestroy"/>
+    <TABLE1 ID="3" VALUE="EasyEjb1 postConstruct"/>
+    <TABLE1 ID="4" VALUE="EasyEjb1 preDestroy"/>
+    <TABLE1 ID="5" VALUE="EasyEjb2 postConstruct"/>
+    <TABLE1 ID="6" VALUE="EasyEjb2 preDestroy"/>
+    <TABLE1 ID="7" VALUE="test me"/>
+
+</dataset>

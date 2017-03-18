@@ -126,7 +126,7 @@ public class TestBeanManager {
         return beanManager.get(clazz);
     }
 
-    public void destory() {
+    public void destroy() {
         while (!constucted.isEmpty()) {
             TestBean bean = constucted.pop();
             try {

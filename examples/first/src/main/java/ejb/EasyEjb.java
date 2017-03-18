@@ -1,6 +1,7 @@
 package ejb;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
@@ -12,8 +13,14 @@ public class EasyEjb {
     private Table1Manager table1Manager;
     @PostConstruct
     private void postConstruct() {
-        table1Manager.create(1L, this.getClass().getCanonicalName() + " postConstruct");
+        table1Manager.create(1L, "EasyEjb postConstruct");
     }
+
+    @PreDestroy
+    private void preDestroy() {
+        table1Manager.create(2L, "EasyEjb preDestroy");
+    }
+
 
 
     public void testMe() {

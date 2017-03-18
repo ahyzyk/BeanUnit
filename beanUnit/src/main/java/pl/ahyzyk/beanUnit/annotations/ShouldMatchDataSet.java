@@ -9,13 +9,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface ShouldMatchDataSet {
-    /**
-     * List of data set files used for comparison.
-     */
+
     String[] value() default "";
 
-    /**
-     * List of columns to be excluded.
-     */
-    String[] excludeColumns() default "";
+    boolean ordered() default false;
 }
