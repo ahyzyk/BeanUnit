@@ -33,8 +33,9 @@ public class TestPersistanceContext {
             throw new RuntimeException("Error during reading persistance.xml", e);
         }
 
-
         Map<String, String> params = new HashMap<>();
+
+
         providers.entrySet().forEach(es -> result.providerMap.put(es.getKey(), new TestProvider(es.getKey(), es.getValue(), params)));
         if (result.providerMap.size() > 0) {
             String defaultPersistance = "";

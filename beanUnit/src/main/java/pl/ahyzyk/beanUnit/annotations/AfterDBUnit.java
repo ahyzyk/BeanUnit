@@ -8,6 +8,15 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
-public @interface AfterDBTest {
+/**
+ * Executed after dbUnit testing ex. @ShouldMatchDataSet
+ *
+ * Example of use:
+ * @AfterDBUnit
+ * function afterDBUnit(){
+ *     ...
+ * }
+ */
+public @interface AfterDBUnit {
 
 }

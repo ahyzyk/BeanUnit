@@ -43,11 +43,15 @@ public class TestEjb {
         System.out.println("After");
     }
 
-    @AfterDBTest
-    public void afterWithDB() {
-        System.out.println("afterWithDB");
+    @AfterDBUnit
+    public void afterDbUnit() {
+        System.out.println("afterDbUnit");
     }
 
+    @BeforeDBUnit
+    public void beforeDBUnit() {
+        System.out.println("beforeDBUnit");
+    }
 
 
 
