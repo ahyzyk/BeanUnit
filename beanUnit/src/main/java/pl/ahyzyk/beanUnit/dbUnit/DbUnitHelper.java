@@ -43,9 +43,13 @@ public class DbUnitHelper {
     }
 
 
-    public <T extends Annotation> void beforeMethod(FrameworkMethod method) {
-
+    public <T extends Annotation> void clearMethod(FrameworkMethod method) {
         runAnnottation(method, ClearTable.class, this::clearTable);
+    }
+
+
+    public <T extends Annotation> void loadMethod(FrameworkMethod method) {
+
         runAnnottation(method, UsingDataSet.class, this::usingDataSet);
     }
 

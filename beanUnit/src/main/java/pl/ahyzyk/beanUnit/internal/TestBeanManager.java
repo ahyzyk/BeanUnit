@@ -5,6 +5,7 @@ import pl.ahyzyk.beanUnit.annotations.BeanImplementations;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
+import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.persistence.PersistenceContext;
 import java.lang.reflect.Field;
@@ -110,9 +111,9 @@ public class TestBeanManager {
 
     private void injectObject(Object object, Field field) {
         try {
-            Object beanObject = findInjectObject(field).getBean();
+            TestBean testBean = findInjectObject(field);
+            Object beanObject = testBean.getBean();
             inject(field, object, beanObject);
-
         } catch (Exception ex) {
             throw new RuntimeException("Error during searching bean field:" + field, ex);
         }
@@ -122,6 +123,7 @@ public class TestBeanManager {
     private void inject(Field field, Object object, Object beanObject) {
         try {
             field.set(object, beanObject);
+
         } catch (Exception e) {
             throw new RuntimeException("Error during injecting bean into " + field.toString(), e);
         }
@@ -177,4 +179,17 @@ public class TestBeanManager {
     public void closeEntityManagers() {
         persistanceContext.close();
     }
+
+    public void initStartup() {
+        beanManager.getBeans().values().stream().forEach(
+                b -> initStartup(b)
+        );
+    }
+
+    private void initStartup(TestBean testBean) {
+        if (testBean.getObject().getClass().isAnnotationPresent(Startup.class)) {
+            testBean.constructBean();
+        }
+    }
+
 }

@@ -94,8 +94,11 @@ public class TestRunner extends BlockJUnit4ClassRunner {
                 System.out.println("Initialize beans");
                 beanManager.init(targetObject);
                 beanManager.beginTransaction();
+                beanManager.initStartup();
+
                 TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(BeforeDBUnit.class), null);
-                tryToExecute("DbUnit before method ", currentNotifier, () -> dbUnitHelper.beforeMethod(currentMethod));
+                tryToExecute("DbUnit clear method ", currentNotifier, () -> dbUnitHelper.clearMethod(currentMethod));
+                tryToExecute("DbUnit load method ", currentNotifier, () -> dbUnitHelper.loadMethod(currentMethod));
 
 
             }

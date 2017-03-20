@@ -1,10 +1,7 @@
 package pl.ahyzyk.test;
 
 
-import ejb.EasyEjb;
-import ejb.EasyEjb3;
-import ejb.IEasyEjb3;
-import ejb.Table1Manager;
+import ejb.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -26,6 +23,9 @@ public class TestEjb {
 
     @Inject
     private Integer integer;
+
+    @EJB
+    private SingletonEjb singletonEjb;
 
     @EJB
     private Table1Manager table1Manager;

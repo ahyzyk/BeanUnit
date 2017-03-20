@@ -40,4 +40,8 @@ public class BeanManager {
             return interfaceClass;
         }
     }
+
+    public Map<Class, TestBean> getBeans() {
+        return beans;
+    }
 }
