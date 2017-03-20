@@ -11,6 +11,8 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.ahyzyk.beanUnit.annotations.AfterDBUnit;
 import pl.ahyzyk.beanUnit.annotations.BeforeDBUnit;
 import pl.ahyzyk.beanUnit.dbUnit.DbUnitHelper;
@@ -21,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 
 
 public class TestRunner extends BlockJUnit4ClassRunner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlockJUnit4ClassRunner.class);
     private final BlockJUnit4ClassRunner runner;
     private final Class<?> klass;
     public FrameworkMethod currentMethod;
@@ -86,12 +89,12 @@ public class TestRunner extends BlockJUnit4ClassRunner {
                 tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterFinallyMethod(currentMethod));
                 tryToExecute("AfterDBUnit", eachNotifier, () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
                 tryToExecute("End of transaction", eachNotifier, beanManager::endTransaction);
-                System.out.println("Ending test : " + currentMethod.getName());
+                LOGGER.info("Ending test : " + currentMethod.getName());
             }
 
             private void onStart() throws InvocationTargetException, IllegalAccessException {
-                System.out.println("Starting: " + currentMethod.getName());
-                System.out.println("Initialize beans");
+                LOGGER.info("Starting: " + currentMethod.getName());
+                LOGGER.info("Initialize beans");
                 beanManager.init(targetObject);
                 beanManager.beginTransaction();
                 beanManager.initStartup();

@@ -6,6 +6,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.ahyzyk.beanUnit.annotations.*;
 import pl.ahyzyk.beanUnit.internal.BeanManager;
 
@@ -18,6 +20,8 @@ import static org.mockito.Mockito.verify;
 
 @Ignore
 public class TestEjb {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestEjb.class);
     @EJB
     private EasyEjb easyEjb;
 
@@ -35,25 +39,23 @@ public class TestEjb {
 
     @Before
     public void before() {
-        System.out.println("Before");
+        LOGGER.info("Before");
     }
 
     @After
     public void after() {
-        System.out.println("After");
+        LOGGER.info("After");
     }
 
     @AfterDBUnit
     public void afterDbUnit() {
-        System.out.println("afterDbUnit");
+        LOGGER.info("afterDbUnit");
     }
 
     @BeforeDBUnit
     public void beforeDBUnit() {
-        System.out.println("beforeDBUnit");
+        LOGGER.info("beforeDBUnit");
     }
-
-
 
     @BeanImplementations
     public void implement(BeanManager beanManager) {

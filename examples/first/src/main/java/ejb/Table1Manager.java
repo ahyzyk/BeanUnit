@@ -1,6 +1,8 @@
 package ejb;
 
 import model.Table1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -8,6 +10,7 @@ import javax.persistence.PersistenceContext;
 
 @Stateless
 public class Table1Manager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Table1Manager.class);
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -22,9 +25,9 @@ public class Table1Manager {
 
     public void show() {
 
-        System.out.println("Table1:");
+        LOGGER.info("Table1:");
         entityManager.createQuery("select t from Table1 t", Table1.class).getResultList()
-                .stream().forEach(t -> System.out.println(t.toString()));
+                .stream().forEach(t -> LOGGER.info(t.toString()));
 
     }
 }

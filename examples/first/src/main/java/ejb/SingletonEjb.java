@@ -1,5 +1,8 @@
 package ejb;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
@@ -11,11 +14,12 @@ import javax.ejb.Startup;
 @Startup
 @Singleton
 public class SingletonEjb {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SingletonEjb.class);
     @EJB
     private Table1Manager table1Manager;
 
     @PostConstruct
     public void init() {
-        System.out.println("Init singleton");
+        LOGGER.info("Init singleton");
     }
 }
