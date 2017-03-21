@@ -13,7 +13,7 @@ import org.xml.sax.InputSource;
 import pl.ahyzyk.beanUnit.annotations.ClearTable;
 import pl.ahyzyk.beanUnit.annotations.ShouldMatchDataSet;
 import pl.ahyzyk.beanUnit.annotations.UsingDataSet;
-import pl.ahyzyk.beanUnit.internal.TestPersistanceContext;
+import pl.ahyzyk.beanUnit.internal.TestPersistenceContext;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -34,10 +34,10 @@ import static org.dbunit.Assertion.assertEquals;
 public class DbUnitHelper {
     private final static Logger LOGGER = LoggerFactory.getLogger(DbUnitHelper.class);
     private final Class klass;
-    private final TestPersistanceContext persistanceContext;
+    private final TestPersistenceContext persistanceContext;
 
 
-    public DbUnitHelper(Class klass, TestPersistanceContext persistanceContext) {
+    public DbUnitHelper(Class klass, TestPersistenceContext persistanceContext) {
         this.klass = klass;
         this.persistanceContext = persistanceContext;
     }

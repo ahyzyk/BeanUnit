@@ -5,6 +5,7 @@ import pl.ahyzyk.beanUnit.annotations.BeanImplementations;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.inject.Inject;
 import javax.persistence.PersistenceContext;
@@ -14,12 +15,14 @@ import java.lang.reflect.Method;
 import java.util.Stack;
 import java.util.function.Function;
 
+import static pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils.isAnnotationPresent;
+
 
 public class TestBeanManager {
 
     private BeanManager beanManager = new BeanManager();
     private Stack<TestBean> constucted = new Stack<>();
-    private TestPersistanceContext persistanceContext;
+    private TestPersistenceContext persistanceContext;
 
     public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
         callMethod(object.getSpy(), object.getObject().getClass(), supperBeforeClass, filter, parameters);
@@ -146,7 +149,10 @@ public class TestBeanManager {
         while (!constucted.isEmpty()) {
             TestBean bean = constucted.pop();
             try {
-                callMethod(bean, false, m -> m.isAnnotationPresent(PreDestroy.class), null);
+                //singleton shouldn't be destroyed
+                if (!isAnnotationPresent(bean.getObject().getClass(), Singleton.class)) {
+                    callMethod(bean, false, m -> m.isAnnotationPresent(PreDestroy.class), null);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Unable to call PreDestroy " + bean.getObject().getClass());
             }
@@ -168,12 +174,12 @@ public class TestBeanManager {
 
     }
 
-    public TestPersistanceContext getPersistanceContext() {
+    public TestPersistenceContext getPersistenceContext() {
         return persistanceContext;
     }
 
-    public void setPersistanceContext(TestPersistanceContext persistanceContext) {
-        this.persistanceContext = persistanceContext;
+    public void setPersistenceContext(TestPersistenceContext persistenceContext) {
+        this.persistanceContext = persistenceContext;
     }
 
     public void closeEntityManagers() {
@@ -187,8 +193,10 @@ public class TestBeanManager {
     }
 
     private void initStartup(TestBean testBean) {
-        if (testBean.getObject().getClass().isAnnotationPresent(Startup.class)) {
-            testBean.constructBean();
+        if (!testBean.canBeConstructed()) {
+            if (isAnnotationPresent(testBean.getObject().getClass(), Startup.class)) {
+                testBean.constructBean();
+            }
         }
     }
 

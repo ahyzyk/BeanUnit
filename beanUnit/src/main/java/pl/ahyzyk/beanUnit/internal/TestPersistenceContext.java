@@ -6,7 +6,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import pl.ahyzyk.beanUnit.TestConfiguration;
+import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
 
 import javax.persistence.EntityManager;
 import javax.persistence.spi.PersistenceProvider;
@@ -21,21 +21,24 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class TestPersistanceContext {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestPersistanceContext.class);
+public class TestPersistenceContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestPersistenceContext.class);
 
-    Map<String, TestProvider> providerMap = new HashMap<>();
+    private static Map<String, TestProvider> providerMap = new HashMap<>();
+    private String defaultPersistance;
 
+    public TestPersistenceContext() {
+    }
 
-    public static TestPersistanceContext init(Class<?> klass) {
+    public static TestPersistenceContext init(Class<?> klass) {
 
-        TestPersistanceContext result = new TestPersistanceContext();
+        TestPersistenceContext result = new TestPersistenceContext();
 
         Map<String, PersistenceProvider> providers;
         try {
             providers = findProviders(klass.getClassLoader().getResources("META-INF/persistence.xml"));
         } catch (Exception e) {
-            throw new RuntimeException("Error during reading persistance.xml", e);
+            throw new RuntimeException("Error during reading persistence.xml", e);
         }
 
         Map<String, String> params = new HashMap<>();
@@ -45,12 +48,12 @@ public class TestPersistanceContext {
         if (result.providerMap.size() > 0) {
             String defaultPersistance = "";
             if (klass.isAnnotationPresent(TestConfiguration.class)) {
-                defaultPersistance = klass.getAnnotation(TestConfiguration.class).persistanceUntiName();
+                defaultPersistance = klass.getAnnotation(TestConfiguration.class).persistenceUnitName();
             }
             if (defaultPersistance.length() == 0) {
                 defaultPersistance = result.providerMap.keySet().stream().findFirst().get();
             }
-            result.providerMap.put("", result.providerMap.get(defaultPersistance));
+            result.defaultPersistance = defaultPersistance;
         }
 
         return result;
@@ -89,7 +92,8 @@ public class TestPersistanceContext {
         try {
             return (PersistenceProvider) Class.forName(className).newInstance();
         } catch (Exception e) {
-            throw new RuntimeException("Unable to create instance for provider " + className, e);
+            LOGGER.warn("Unable to create instance for provider " + className, e);
+            return null;
         }
     }
 
@@ -115,7 +119,7 @@ public class TestPersistanceContext {
     }
 
     public EntityManager get(String s) {
-        return providerMap.get(s).getEntityManager();
+        return providerMap.get(s.isEmpty() ? defaultPersistance : s + "_TEST").getEntityManager();
     }
 
 

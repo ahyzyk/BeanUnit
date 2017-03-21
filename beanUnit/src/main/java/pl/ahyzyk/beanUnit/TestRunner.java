@@ -17,7 +17,7 @@ import pl.ahyzyk.beanUnit.annotations.AfterDBUnit;
 import pl.ahyzyk.beanUnit.annotations.BeforeDBUnit;
 import pl.ahyzyk.beanUnit.dbUnit.DbUnitHelper;
 import pl.ahyzyk.beanUnit.internal.TestBeanManager;
-import pl.ahyzyk.beanUnit.internal.TestPersistanceContext;
+import pl.ahyzyk.beanUnit.internal.TestPersistenceContext;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -35,9 +35,9 @@ public class TestRunner extends BlockJUnit4ClassRunner {
     public TestRunner(Class<?> klass) throws InvocationTargetException, InitializationError, InstantiationException, IllegalAccessException {
         super(klass);
         this.klass = klass;
-        beanManager.setPersistanceContext(TestPersistanceContext.init(klass));
+        beanManager.setPersistenceContext(TestPersistenceContext.init(klass));
 
-        dbUnitHelper = new DbUnitHelper(klass, beanManager.getPersistanceContext());
+        dbUnitHelper = new DbUnitHelper(klass, beanManager.getPersistenceContext());
         runner = new BlockJUnit4ClassRunner(klass) {
 
             public EachTestNotifier eachNotifier;

@@ -1,11 +1,11 @@
 package pl.ahyzyk.test;
 
 import org.junit.runner.RunWith;
-import pl.ahyzyk.beanUnit.TestConfiguration;
 import pl.ahyzyk.beanUnit.TestRunner;
+import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
 
 
 @RunWith(TestRunner.class)
-@TestConfiguration(persistanceUntiName = "Oracle-eclipse")
+@TestConfiguration(persistenceUnitName = "Oracle-eclipse")
 public class TestOracleEclipse extends TestEjb {
 }

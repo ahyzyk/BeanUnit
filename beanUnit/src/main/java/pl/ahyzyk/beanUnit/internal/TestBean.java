@@ -54,6 +54,9 @@ public class TestBean {
         return constructed;
     }
 
+    public boolean canBeConstructed() {
+        return manager != null;
+    }
 
     public void setConstructed() {
         manager.addConstucted(this);
@@ -61,6 +64,12 @@ public class TestBean {
     }
 
     public void constructBean() {
-        manager.constructBean(this);
+        try {
+            if (manager != null) {
+                manager.constructBean(this);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("Error during constructing bean : " + this.getObject().getClass(), ex);
+        }
     }
 }

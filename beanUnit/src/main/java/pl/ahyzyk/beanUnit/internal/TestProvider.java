@@ -1,6 +1,7 @@
 package pl.ahyzyk.beanUnit.internal;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ public class TestProvider {
     private boolean used = false;
     private EntityManager entityManager = null;
     private boolean error = false;
+    private EntityManagerFactory entityManagerFactory;
 
     public TestProvider(String key, PersistenceProvider value, Map<String, String> params) {
         this.persistanceName = key;
@@ -29,8 +31,11 @@ public class TestProvider {
             throw new RuntimeException("Error during getting entity manager");
         }
         try {
-            if (entityManager == null) {
-                entityManager = provider.createEntityManagerFactory(persistanceName, params).createEntityManager();
+            if (entityManagerFactory == null) {
+                entityManagerFactory = provider.createEntityManagerFactory(persistanceName, params);
+            }
+            if (entityManager == null || !entityManager.isOpen()) {
+                entityManager = entityManagerFactory.createEntityManager();
             }
             return entityManager;
         } catch (Throwable e) {
