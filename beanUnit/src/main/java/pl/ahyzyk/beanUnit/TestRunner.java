@@ -86,6 +86,8 @@ public class TestRunner extends BlockJUnit4ClassRunner {
             }
 
             private void onFinishFinally() throws InvocationTargetException, IllegalAccessException {
+                tryToExecute("End of transaction", eachNotifier, beanManager::endTransaction);
+                tryToExecute("Begin transaction", eachNotifier, beanManager::beginTransaction);
                 tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterFinallyMethod(currentMethod));
                 tryToExecute("AfterDBUnit", eachNotifier, () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
                 tryToExecute("End of transaction", eachNotifier, beanManager::endTransaction);
@@ -96,7 +98,8 @@ public class TestRunner extends BlockJUnit4ClassRunner {
                 LOGGER.info("Starting: " + currentMethod.getName());
                 LOGGER.info("Initialize beans");
                 beanManager.init(targetObject);
-                beanManager.beginTransaction();
+                tryToExecute("Begin transaction", eachNotifier, beanManager::beginTransaction);
+
                 beanManager.initStartup();
 
                 TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(BeforeDBUnit.class), null);
