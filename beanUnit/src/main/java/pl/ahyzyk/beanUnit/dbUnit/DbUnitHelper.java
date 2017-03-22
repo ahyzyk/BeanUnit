@@ -58,7 +58,7 @@ public class DbUnitHelper {
     }
 
     public void afterFinallyMethod(FrameworkMethod method) {
-        runAnnottation(method, ClearTable.class, this::clearTable);
+
     }
 
     private void clearTable(FrameworkMethod frameworkMethod, ClearTable t) throws SQLException {
