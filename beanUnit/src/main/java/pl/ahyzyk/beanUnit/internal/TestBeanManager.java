@@ -23,6 +23,7 @@ public class TestBeanManager {
     private BeanManager beanManager = new BeanManager();
     private Stack<TestBean> constucted = new Stack<>();
     private TestPersistenceContext persistanceContext;
+    private BeanState beanState;
 
     public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
         callMethod(object.getSpy(), object.getObject().getClass(), supperBeforeClass, filter, parameters);
@@ -57,12 +58,13 @@ public class TestBeanManager {
 
     public void init(Object object) {
         beanManager.clear();
+        beanState = BeanState.CREATE;
         constucted.clear();
         initDefaultInjects();
         initImplementations(object);
 
         analyzeFields(object, object.getClass());
-
+        beanState = BeanState.CONSTRUCT;
     }
 
     private void initImplementations(Object object) {
@@ -81,7 +83,7 @@ public class TestBeanManager {
     }
 
     public void constructBean(TestBean bean) {
-        if (bean.isConstructed()) {
+        if (beanState == BeanState.CREATE || bean.isConstructed()) {
             return;
         }
         try {
