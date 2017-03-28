@@ -14,6 +14,7 @@ public class TestProxyHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         bean.constructBean();
+        method.setAccessible(true);
         return method.invoke(bean.getSpy(), args);
     }
 }
