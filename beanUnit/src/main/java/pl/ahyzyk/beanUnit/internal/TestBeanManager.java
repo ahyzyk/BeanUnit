@@ -4,6 +4,7 @@ import pl.ahyzyk.beanUnit.annotations.BeanImplementations;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -53,7 +54,8 @@ public class TestBeanManager {
     }
 
     private static boolean isInjectAnnotationPresent(Field field) {
-        return field.isAnnotationPresent(Inject.class) || field.isAnnotationPresent(EJB.class) || field.isAnnotationPresent(PersistenceContext.class);
+        return field.isAnnotationPresent(Inject.class) || field.isAnnotationPresent(EJB.class) || field.isAnnotationPresent(PersistenceContext.class) ||
+                field.isAnnotationPresent(Resource.class);
     }
 
     public void init(Object object) {
