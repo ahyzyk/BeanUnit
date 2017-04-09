@@ -92,7 +92,7 @@ public class TestPersistenceContext {
         try {
             return (PersistenceProvider) Class.forName(className).newInstance();
         } catch (Exception e) {
-            LOGGER.warn("Unable to create instance for provider " + className, e);
+            LOGGER.warn("Unable to create instance for provider " + className);
             return null;
         }
     }
