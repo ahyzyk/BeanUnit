@@ -3,13 +3,13 @@ package pl.ahyzyk.beanUnit.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
 
 import javax.persistence.EntityManager;
-import javax.persistence.spi.PersistenceProvider;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,33 +34,41 @@ public class TestPersistenceContext {
 
         TestPersistenceContext result = new TestPersistenceContext();
 
-        Map<String, PersistenceProvider> providers;
+        Map<String, PersistenceUnitInfoImpl> providers;
         try {
             providers = findProviders(klass.getClassLoader().getResources("META-INF/persistence.xml"));
         } catch (Exception e) {
             throw new RuntimeException("Error during reading persistence.xml", e);
         }
 
-        Map<String, String> params = new HashMap<>();
+        for (Map.Entry<String, PersistenceUnitInfoImpl> entry : providers.entrySet()) {
+            Map<String, String> params = new HashMap<>();
+            String copyClass = entry.getValue().getProperties().getProperty("beanUnit.copyClass", "");
+            if (!copyClass.isEmpty()) {
+                for (String className : providers.get(copyClass).getManagedClassNames()) {
+                    entry.getValue().getManagedClassNames().add(className);
+                }
+            }
 
+            result.providerMap.put(entry.getKey(), new TestProvider(entry.getKey(), entry.getValue(), params));
+        }
 
-        providers.entrySet().forEach(es -> result.providerMap.put(es.getKey(), new TestProvider(es.getKey(), es.getValue(), params)));
         if (result.providerMap.size() > 0) {
-            String defaultPersistance = "";
+            String defaultPersistence = "";
             if (klass.isAnnotationPresent(TestConfiguration.class)) {
-                defaultPersistance = klass.getAnnotation(TestConfiguration.class).persistenceUnitName();
+                defaultPersistence = klass.getAnnotation(TestConfiguration.class).persistenceUnitName();
             }
-            if (defaultPersistance.length() == 0) {
-                defaultPersistance = result.providerMap.keySet().stream().findFirst().get();
+            if (defaultPersistence.length() == 0) {
+                defaultPersistence = result.providerMap.keySet().stream().findFirst().get();
             }
-            result.defaultPersistance = defaultPersistance;
+            result.defaultPersistance = defaultPersistence;
         }
 
         return result;
     }
 
-    private static Map<String, PersistenceProvider> findProviders(Enumeration<URL> resource) throws ClassNotFoundException, IllegalAccessException, InstantiationException, ParserConfigurationException, IOException, SAXException {
-        Map<String, PersistenceProvider> providers = new HashMap<>();
+    private static Map<String, PersistenceUnitInfoImpl> findProviders(Enumeration<URL> resource) throws ClassNotFoundException, IllegalAccessException, InstantiationException, ParserConfigurationException, IOException, SAXException {
+        Map<String, PersistenceUnitInfoImpl> providers = new HashMap<>();
         if (resource == null) {
             return providers;
         }
@@ -72,15 +80,26 @@ public class TestPersistenceContext {
             LOGGER.info("PU XML location : " + url.toString());
             Document doc = dBuilder.parse(url.openStream());
             NodeList childs = doc.getDocumentElement().getChildNodes();
-            findNode(childs, "persistence-unit", t ->
-                    findNode(t.getChildNodes(), "provider", t2 -> {
-                                String name = t.getAttributes().getNamedItem("name").getNodeValue();
-                                if (!providers.containsKey(name)) {
-                                    providers.put(name, createPersistenceProvider(t2.getTextContent().trim()));
-                                }
+            findNode(childs, "persistence-unit", persistenceUnit ->
+            {
+                String name = persistenceUnit.getAttributes().getNamedItem("name").getNodeValue();
+                PersistenceUnitInfoImpl providerUnitInfo = new PersistenceUnitInfoImpl(name);
+                consumeNode(persistenceUnit.getChildNodes(), child -> {
+                    if ("properties".equalsIgnoreCase(child.getNodeName())) {
+                        consumeNode(child.getChildNodes(), prop -> {
+                            if ("property".equalsIgnoreCase(prop.getNodeName())) {
+                                providerUnitInfo.setProperty(prop.getAttributes().getNamedItem("name").getNodeValue(),
+                                        prop.getAttributes().getNamedItem("value").getNodeValue());
                             }
+                        });
 
-                    ));
+                    } else {
+                        providerUnitInfo.getConsumer(child.getNodeName()).accept(child.getTextContent().trim());
+                    }
+
+                });
+                providers.put(providerUnitInfo.getPersistenceUnitName(), providerUnitInfo);
+            });
         }
         String names = providers.keySet().stream().collect(Collectors.joining(", "));
         LOGGER.info("Loaded persistence unit names : " + names + "\n");
@@ -88,14 +107,17 @@ public class TestPersistenceContext {
         return providers;
     }
 
-    private static PersistenceProvider createPersistenceProvider(String className) {
-        try {
-            return (PersistenceProvider) Class.forName(className).newInstance();
-        } catch (Exception e) {
-            LOGGER.warn("Unable to create instance for provider " + className);
-            return null;
+
+    private static void consumeNode(NodeList nodeList, Consumer<Node> consumer) {
+        for (int x = 0; x < nodeList.getLength(); x++) {
+            Node item = nodeList.item(x);
+            if (item instanceof Element) {
+                consumer.accept(item);
+            }
+
         }
     }
+
 
     private static void findNode(NodeList nodeList, String node, Consumer<Node> consumer) {
         for (int x = 0; x < nodeList.getLength(); x++) {
@@ -119,11 +141,13 @@ public class TestPersistenceContext {
     }
 
     public EntityManager get(String s) {
+
         return providerMap.get(s.isEmpty() ? defaultPersistance : s + "_TEST").getEntityManager();
     }
-
 
     public EntityManager get() {
         return get("");
     }
+
+
 }

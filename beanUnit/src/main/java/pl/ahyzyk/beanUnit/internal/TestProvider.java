@@ -2,7 +2,6 @@ package pl.ahyzyk.beanUnit.internal;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceProvider;
 import java.util.Map;
 
 /**
@@ -11,17 +10,18 @@ import java.util.Map;
 public class TestProvider {
 
 
-    private final PersistenceProvider provider;
     private final String persistanceName;
+    private final PersistenceUnitInfoImpl persistenceUnitInfo;
     private final Map<String, String> params;
     private boolean used = false;
     private EntityManager entityManager = null;
     private boolean error = false;
     private EntityManagerFactory entityManagerFactory;
 
-    public TestProvider(String key, PersistenceProvider value, Map<String, String> params) {
+    public TestProvider(String key, PersistenceUnitInfoImpl persistenceUnitInfo, Map<String, String> params) {
         this.persistanceName = key;
-        this.provider = value;
+
+        this.persistenceUnitInfo = persistenceUnitInfo;
         this.params = params;
     }
 
@@ -32,7 +32,7 @@ public class TestProvider {
         }
         try {
             if (entityManagerFactory == null) {
-                entityManagerFactory = provider.createEntityManagerFactory(persistanceName, params);
+                entityManagerFactory = persistenceUnitInfo.getProvider().createContainerEntityManagerFactory(persistenceUnitInfo, params);
             }
             if (entityManager == null || !entityManager.isOpen()) {
                 entityManager = entityManagerFactory.createEntityManager();
@@ -71,7 +71,4 @@ public class TestProvider {
         used = false;
     }
 
-    public PersistenceProvider getProvider() {
-        return provider;
-    }
 }

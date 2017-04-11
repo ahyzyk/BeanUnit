@@ -110,4 +110,11 @@ public class TestEjb {
         verify(beanManager.getSpy(EasyEjb.class), times(1)).testMe();
     }
 
+    @Test
+    @UsingDataSet("datasets/testEjb/singleColumnTableTest.xml")
+    @ShouldMatchDataSet(value = "datasets/testEjb/singleColumnTableTest.xml", ordered = true)
+    public void singleColumnTableTest() {
+        //ok import/export should be the same
+    }
+
 }

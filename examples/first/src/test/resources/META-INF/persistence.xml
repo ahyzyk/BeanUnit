@@ -16,9 +16,10 @@
     </persistence-unit>
 
     <persistence-unit name="H2-eclipse" transaction-type="RESOURCE_LOCAL">
+
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <class>model.Table1</class>
         <properties>
+            <property name="beanUnit.copyClass" value="AH2-hibernate"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
             <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
@@ -28,9 +29,11 @@
     </persistence-unit>
 
     <persistence-unit name="Oracle-eclipse" transaction-type="RESOURCE_LOCAL">
+
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <class>model.Table1</class>
+
         <properties>
+            <property name="beanUnit.copyClass" value="AH2-hibernate"/>
             <property name="javax.persistence.jdbc.driver" value="oracle.jdbc.driver.OracleDriver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:oracle:thin:@LOCALHOST:1521:baza"/>
             <property name="javax.persistence.jdbc.user" value="test_user"/>
@@ -44,8 +47,9 @@
     <persistence-unit name="Oracle-hibernate" transaction-type="RESOURCE_LOCAL">
 
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>model.Table1</class>
+
         <properties>
+            <property name="beanUnit.copyClass" value="AH2-hibernate"/>
             <property name="javax.persistence.jdbc.driver" value="oracle.jdbc.driver.OracleDriver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:oracle:thin:@LOCALHOST:1521:baza"/>
             <property name="javax.persistence.jdbc.user" value="test_user"/>

@@ -25,6 +25,7 @@ import java.lang.annotation.Annotation;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.dbunit.Assertion.assertEquals;
 
@@ -137,7 +138,11 @@ public class DbUnitHelper {
             ITable matchTable = dataSet.getTable(table);
             TableInfo tableInfo = new TableInfo(matchTable).invoke();
             Query query = entityManager.createNativeQuery(tableInfo.getSelectSql());
-            ITable result = createResultTable(matchTable, query.getResultList());
+            ITable result = createResultTable(matchTable,
+                    (List<Object[]>)
+                            query.getResultList().stream()
+                                    .map(o -> o.getClass().isArray() ? o : new Object[]{o})
+                                    .collect(Collectors.toList()));
             try {
                 if (annotation.ordered()) {
                     String[] columns = tableInfo.getColumnList().toArray(new String[]{});
