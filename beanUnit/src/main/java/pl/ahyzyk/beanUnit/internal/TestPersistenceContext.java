@@ -83,7 +83,8 @@ public class TestPersistenceContext {
             findNode(childs, "persistence-unit", persistenceUnit ->
             {
                 String name = persistenceUnit.getAttributes().getNamedItem("name").getNodeValue();
-                PersistenceUnitInfoImpl providerUnitInfo = new PersistenceUnitInfoImpl(name);
+                String transactionType = persistenceUnit.getAttributes().getNamedItem("transaction-type").getNodeValue();
+                PersistenceUnitInfoImpl providerUnitInfo = new PersistenceUnitInfoImpl(name, transactionType);
                 consumeNode(persistenceUnit.getChildNodes(), child -> {
                     if ("properties".equalsIgnoreCase(child.getNodeName())) {
                         consumeNode(child.getChildNodes(), prop -> {

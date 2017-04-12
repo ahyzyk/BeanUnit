@@ -39,8 +39,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     private Map<String, Consumer<String>> consumerMap = new HashMap();
 
-    public PersistenceUnitInfoImpl(String persistenceUnitName) {
+    public PersistenceUnitInfoImpl(String persistenceUnitName, String transactionType) {
         this.persistenceUnitName = persistenceUnitName;
+        if (transactionType != null && !transactionType.isEmpty()) {
+            this.transactionType = PersistenceUnitTransactionType.valueOf(transactionType);
+        }
         consumerMap.put("provider", this::setPersistenceProviderClassName);
         consumerMap.put("jta-data-source", this::setJtaDataSource);
         consumerMap.put("non-jta-data-source", this::setNonJtaDataSource);
@@ -66,7 +69,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
         if (consumerMap.containsKey(name)) {
             return consumerMap.get(name);
         }
-        return s -> LOGGER.warn("Lack of consumer" + s);
+        return s -> LOGGER.warn("Not implemented tag " + name);
     }
 
     public void setProperty(String s, String s2) {
@@ -210,9 +213,9 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
         try {
             return (DataSource) ((Context) new InitialContext().lookup("java:comp/env")).lookup(name);
         } catch (final NamingException e) {
-            throw new RuntimeException("Unable to find data source: " + name, e);
+            LOGGER.warn("Unable to find data source: " + name);
         }
-
+        return null;
     }
 
     public PersistenceProvider getProvider() {
