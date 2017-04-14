@@ -49,7 +49,7 @@ public class TestBean {
     }
 
     private void findOutTransactionalAttributeType(Object object) {
-        transactionAttribute = TransactionAttributeType.NEVER;
+        transactionAttribute = TransactionAttributeType.SUPPORTS;
         TransactionAttribute temp = AnnotationUtils.getAnnotation(beanClass, TransactionAttribute.class);
         if (temp != null) {
             transactionAttribute = temp.value();
@@ -63,7 +63,7 @@ public class TestBean {
             transactionAttribute = TransactionAttributeType.REQUIRED;
             return;
         }
-        transactionAttribute = TransactionAttributeType.NEVER;
+        transactionAttribute = TransactionAttributeType.SUPPORTS;
 
 
     }
