@@ -88,4 +88,7 @@ public class TestProvider {
         used = false;
     }
 
+    public void setUsed(boolean used) {
+        this.used = used;
+    }
 }

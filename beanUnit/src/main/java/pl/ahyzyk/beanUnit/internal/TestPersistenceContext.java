@@ -145,7 +145,7 @@ public class TestPersistenceContext {
 
     public EntityManager get(String s) {
         if (entityManagers.isEmpty()) {
-            return providerMap.get(s.isEmpty() ? defaultPersistence : s + "_TEST").getEntityManager();
+            return getTestProvider(s).getEntityManager();
         } else {
             return entityManagers.peek();
         }
@@ -156,4 +156,11 @@ public class TestPersistenceContext {
     }
 
 
+    public void setUsed(String s) {
+        getTestProvider(s).setUsed(true);
+    }
+
+    private TestProvider getTestProvider(String s) {
+        return providerMap.get(s.isEmpty() ? defaultPersistence : s + "_TEST");
+    }
 }

@@ -21,6 +21,7 @@ public class TestEntityManager implements EntityManager {
     public TestEntityManager(TestPersistenceContext persistenceContext, String persistenceUnit) {
         this.persistenceContext = persistenceContext;
         this.persistenceUnit = persistenceUnit;
+        persistenceContext.setUsed(persistenceUnit);
     }
 
     private EntityManager getEntityManager() {
