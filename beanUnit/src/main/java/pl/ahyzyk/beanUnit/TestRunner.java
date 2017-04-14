@@ -90,7 +90,7 @@ public class TestRunner extends BlockJUnit4ClassRunner {
 //                tryToExecute("Begin transaction", eachNotifier, beanManager::beginTransaction);
                 tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterFinallyMethod(currentMethod));
                 tryToExecute("AfterDBUnit", eachNotifier, () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
-//                tryToExecute("End of transaction", eachNotifier, beanManager::endTransaction);
+                tryToExecute("End of transaction", eachNotifier, beanManager::endTransactions);
                 LOGGER.info("Ending test : " + currentMethod.getName());
             }
 

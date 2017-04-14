@@ -32,9 +32,7 @@ public class TestProvider {
             throw new RuntimeException("Error during getting entity manager");
         }
         try {
-            if (entityManagerFactory == null) {
-                entityManagerFactory = persistenceUnitInfo.getProvider().createContainerEntityManagerFactory(persistenceUnitInfo, params);
-            }
+            initProvider();
             if (entityManagers.isEmpty()) {
                 addNew();
             }
@@ -42,6 +40,12 @@ public class TestProvider {
         } catch (Throwable e) {
             error = true;
             throw e;
+        }
+    }
+
+    private void initProvider() {
+        if (entityManagerFactory == null) {
+            entityManagerFactory = persistenceUnitInfo.getProvider().createContainerEntityManagerFactory(persistenceUnitInfo, params);
         }
     }
 
@@ -57,6 +61,7 @@ public class TestProvider {
     }
 
     public void addNew() {
+        initProvider();
         entityManagers.push(entityManagerFactory.createEntityManager());
     }
 
@@ -90,5 +95,11 @@ public class TestProvider {
 
     public void setUsed(boolean used) {
         this.used = used;
+    }
+
+    public void endAll() {
+        while (!entityManagers.isEmpty()) {
+            end();
+        }
     }
 }

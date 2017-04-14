@@ -185,6 +185,12 @@ public class TestBeanManager {
 
     }
 
+    public void endTransactions() {
+        persistanceContext.endAll();
+
+    }
+
+
     public TestPersistenceContext getPersistenceContext() {
         return persistanceContext;
     }

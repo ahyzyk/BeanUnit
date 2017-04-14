@@ -139,6 +139,10 @@ public class TestPersistenceContext {
         providerMap.values().stream().forEach(p -> p.end());
     }
 
+    public void endAll() {
+        providerMap.values().stream().forEach(p -> p.endAll());
+    }
+
     public void close() {
         providerMap.values().stream().forEach(p -> p.close());
     }
