@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -25,7 +26,8 @@ public class TestPersistenceContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestPersistenceContext.class);
 
     private static Map<String, TestProvider> providerMap = new HashMap<>();
-    private String defaultPersistance;
+    private String defaultPersistence;
+    private Stack<EntityManager> entityManagers = new Stack<>();
 
     public TestPersistenceContext() {
     }
@@ -61,7 +63,7 @@ public class TestPersistenceContext {
             if (defaultPersistence.length() == 0) {
                 defaultPersistence = result.providerMap.keySet().stream().findFirst().get();
             }
-            result.defaultPersistance = defaultPersistence;
+            result.defaultPersistence = defaultPersistence;
         }
 
         return result;
@@ -142,8 +144,11 @@ public class TestPersistenceContext {
     }
 
     public EntityManager get(String s) {
-
-        return providerMap.get(s.isEmpty() ? defaultPersistance : s + "_TEST").getEntityManager();
+        if (entityManagers.isEmpty()) {
+            return providerMap.get(s.isEmpty() ? defaultPersistence : s + "_TEST").getEntityManager();
+        } else {
+            return entityManagers.peek();
+        }
     }
 
     public EntityManager get() {

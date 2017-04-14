@@ -38,6 +38,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
     private String persistenceXMLSchemaVersion;
 
     private Map<String, Consumer<String>> consumerMap = new HashMap();
+    private String jtaName;
 
     public PersistenceUnitInfoImpl(String persistenceUnitName, String transactionType) {
         this.persistenceUnitName = persistenceUnitName;
@@ -121,11 +122,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     @Override
     public DataSource getJtaDataSource() {
-        return jtaDataSource;
+        return lookupDataSource(jtaName);
     }
 
     public void setJtaDataSource(String name) {
-        jtaDataSource = lookupDataSource(name);
+        this.jtaName = name;
     }
 
     @Override
@@ -211,7 +212,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     private DataSource lookupDataSource(final String name) {
         try {
-            return (DataSource) ((Context) new InitialContext().lookup("java:comp/env")).lookup(name);
+            return (DataSource) ((Context) InitialContext.doLookup("java:comp/env")).lookup(name);
         } catch (final NamingException e) {
             LOGGER.warn("Unable to find data source: " + name);
         }

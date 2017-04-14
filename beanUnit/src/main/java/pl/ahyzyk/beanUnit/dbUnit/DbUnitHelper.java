@@ -50,7 +50,6 @@ public class DbUnitHelper {
 
 
     public <T extends Annotation> void loadMethod(FrameworkMethod method) {
-
         runAnnottation(method, UsingDataSet.class, this::usingDataSet);
     }
 
@@ -64,11 +63,13 @@ public class DbUnitHelper {
 
     private void clearTable(FrameworkMethod frameworkMethod, ClearTable t) throws SQLException {
         EntityManager entityManager = persistanceContext.get();
-
+        entityManager.getTransaction().begin();
         for (String table : t.value()) {
             entityManager.createNativeQuery("delete from " + table).executeUpdate();
         }
+        entityManager.getTransaction().commit();
         entityManager.clear();
+        persistanceContext.end();
     }
 
 
@@ -89,6 +90,7 @@ public class DbUnitHelper {
         for (String file : annotation.value()) {
             checkData(entityManager, file, annotation);
         }
+        persistanceContext.end();
 
     }
 
@@ -181,9 +183,12 @@ public class DbUnitHelper {
 
     private void usingDataSet(FrameworkMethod method, UsingDataSet annotation) throws DataSetException, IllegalAccessException, InstantiationException {
         EntityManager entityManager = persistanceContext.get();
+        entityManager.getTransaction().begin();
         for (String file : annotation.value()) {
             loadData(entityManager, file);
         }
+        entityManager.getTransaction().commit();
+        persistanceContext.end();
     }
 
     private void loadData(EntityManager entityManager, String file) throws DataSetException {

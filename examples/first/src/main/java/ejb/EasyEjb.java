@@ -18,6 +18,7 @@ public class EasyEjb {
     @PostConstruct
     private void postConstruct() {
         table1Manager.create(1L, "EasyEjb postConstruct");
+
     }
 
     @PreDestroy

@@ -1,9 +1,9 @@
 package model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 public class Table1 {
@@ -14,6 +14,9 @@ public class Table1 {
     private String value;
     @Column(name = "DATA")
     private Date date;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "table1")
+    private List<Table2> listData = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -37,6 +40,14 @@ public class Table1 {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public List<Table2> getListData() {
+        return listData;
+    }
+
+    public void setListData(List<Table2> listData) {
+        this.listData = listData;
     }
 
     @Override

@@ -15,6 +15,13 @@ public class TestProxyHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         bean.constructBean();
         method.setAccessible(true);
-        return method.invoke(bean.getSpy(), args);
+        if (method.getDeclaringClass() != Object.class) {
+            bean.manager.pushTransaction(bean.getTransactionAttributeType(method));
+        }
+        Object result = method.invoke(bean.getSpy(), args);
+        if (method.getDeclaringClass() != Object.class) {
+            bean.manager.popTransaction();
+        }
+        return result;
     }
 }

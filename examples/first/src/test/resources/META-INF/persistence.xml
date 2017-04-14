@@ -6,6 +6,7 @@
     <persistence-unit name="H2-hibernate" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>model.Table1</class>
+        <class>model.Table2</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
@@ -16,14 +17,15 @@
     </persistence-unit>
 
     <persistence-unit name="H2-eclipse" transaction-type="RESOURCE_LOCAL">
-
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <!--<jta-data-source>jdbc/jta</jta-data-source>-->
         <properties>
             <property name="beanUnit.copyClass" value="AH2-hibernate"/>
             <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"/>
             <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
             <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+            <property name="eclipselink.logging.level" value="FINE"/>
         </properties>
 
     </persistence-unit>

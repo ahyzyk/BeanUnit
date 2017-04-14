@@ -6,13 +6,13 @@ import java.lang.annotation.Annotation;
  * Created by ahyzyk on 21.03.2017.
  */
 public class AnnotationUtils {
-    public static boolean isAnnotationPresent(Class clazz, Class<? extends Annotation> annotation) {
+    public static <T extends Annotation> T getAnnotation(Class clazz, Class<T> annotation) {
         if (clazz == Object.class) {
-            return false;
+            return null;
         }
         if (!clazz.isAnnotationPresent(annotation)) {
-            return isAnnotationPresent(clazz.getSuperclass(), annotation);
+            return getAnnotation(clazz.getSuperclass(), annotation);
         }
-        return true;
+        return (T) clazz.getAnnotation(annotation);
     }
 }

@@ -3,6 +3,7 @@ package pl.ahyzyk.beanUnit.internal;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.util.Map;
+import java.util.Stack;
 
 /**
  * Created by andrz on 16.03.2017.
@@ -14,7 +15,7 @@ public class TestProvider {
     private final PersistenceUnitInfoImpl persistenceUnitInfo;
     private final Map<String, String> params;
     private boolean used = false;
-    private EntityManager entityManager = null;
+    private Stack<EntityManager> entityManagers = new Stack<>();
     private boolean error = false;
     private EntityManagerFactory entityManagerFactory;
 
@@ -34,10 +35,10 @@ public class TestProvider {
             if (entityManagerFactory == null) {
                 entityManagerFactory = persistenceUnitInfo.getProvider().createContainerEntityManagerFactory(persistenceUnitInfo, params);
             }
-            if (entityManager == null || !entityManager.isOpen()) {
-                entityManager = entityManagerFactory.createEntityManager();
+            if (entityManagers.isEmpty()) {
+                addNew();
             }
-            return entityManager;
+            return entityManagers.peek();
         } catch (Throwable e) {
             error = true;
             throw e;
@@ -47,25 +48,41 @@ public class TestProvider {
 
     public void begin() {
         if (used) {
-            if (!entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().begin();
+            addNew();
+            System.out.println("DODANIE TRANSAKCJI");
+            if (!entityManagers.peek().getTransaction().isActive()) {
+                entityManagers.peek().getTransaction().begin();
             }
         }
     }
 
+    public void addNew() {
+        entityManagers.push(entityManagerFactory.createEntityManager());
+    }
+
     public void end() {
-        if (used) {
-            if (entityManager.getTransaction().getRollbackOnly()) {
-                entityManager.getTransaction().rollback();
-            } else {
-                entityManager.getTransaction().commit();
+        if (!entityManagers.isEmpty()) {
+            EntityManager entityManager = entityManagers.pop();
+            if (used && entityManager.getTransaction().isActive()) {
+                System.out.println("USUNIĘCIE TRANSAKCJI");
+                if (entityManager.getTransaction().getRollbackOnly()) {
+                    entityManager.getTransaction().rollback();
+                } else {
+                    entityManager.getTransaction().commit();
+                }
             }
+
+            entityManager.clear();
+            entityManager.close();
+
         }
     }
 
     public void close() {
-        if (entityManager != null && entityManager.isOpen()) {
-            entityManager.close();
+        if (!entityManagers.isEmpty()) {
+            if (entityManagers.peek() != null && entityManagers.peek().isOpen()) {
+                entityManagers.peek().close();
+            }
         }
 
         used = false;

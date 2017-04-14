@@ -1,0 +1,7 @@
+<dataset>
+    <TABLE1 ID="1" VALUE="2" data="2016-03-03"/>
+    <TABLE1 ID="2" data="2016-03-03"/>
+    <TABLE2 ID="1" TABLE1_ID="1"/>
+    <TABLE2 ID="2" TABLE1_ID="1"/>
+    <TABLE2 ID="3" TABLE1_ID="1"/>
+</dataset>
