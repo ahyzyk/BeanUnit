@@ -53,7 +53,7 @@ public class TestProvider {
     public void begin() {
         if (used) {
             addNew();
-            System.out.println("DODANIE TRANSAKCJI");
+//            System.out.println("DODANIE TRANSAKCJI");
             if (!entityManagers.peek().getTransaction().isActive()) {
                 entityManagers.peek().getTransaction().begin();
             }
@@ -69,7 +69,7 @@ public class TestProvider {
         if (!entityManagers.isEmpty()) {
             EntityManager entityManager = entityManagers.pop();
             if (used && entityManager.getTransaction().isActive()) {
-                System.out.println("USUNIĘCIE TRANSAKCJI");
+//                System.out.println("USUNIĘCIE TRANSAKCJI");
                 if (entityManager.getTransaction().getRollbackOnly()) {
                     entityManager.getTransaction().rollback();
                 } else {
