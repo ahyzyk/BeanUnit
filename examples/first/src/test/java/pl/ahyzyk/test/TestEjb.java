@@ -64,7 +64,7 @@ public class TestEjb {
 
 
     @Test
-    @ClearTable("Table1")
+    @ClearTable({"Table2", "Table1"})
     @UsingDataSet("datasets/testEjb/test1.xml")
     @ShouldMatchDataSet("datasets/testEjb/test1.xml")
     public void test1ExpectedError() {

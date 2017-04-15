@@ -14,16 +14,30 @@ public class TestProvider {
     private final String persistanceName;
     private final PersistenceUnitInfoImpl persistenceUnitInfo;
     private final Map<String, String> params;
+    private final TestPersistenceContext persistenceContext;
     private boolean used = false;
     private Stack<EntityManager> entityManagers = new Stack<>();
     private boolean error = false;
     private EntityManagerFactory entityManagerFactory;
 
-    public TestProvider(String key, PersistenceUnitInfoImpl persistenceUnitInfo, Map<String, String> params) {
+    public TestProvider(TestPersistenceContext persistenceContext, String key, PersistenceUnitInfoImpl persistenceUnitInfo, Map<String, String> params) {
         this.persistanceName = key;
+        this.persistenceContext = persistenceContext;
 
         this.persistenceUnitInfo = persistenceUnitInfo;
         this.params = params;
+    }
+
+    public EntityManager getRealEntityManager() {
+        if (error) {
+            throw new RuntimeException("Error during getting entity manager");
+        }
+        try {
+            return entityManagerFactory.createEntityManager();
+        } catch (Throwable ex) {
+            error = true;
+            throw ex;
+        }
     }
 
     public EntityManager getEntityManager() {
@@ -32,7 +46,6 @@ public class TestProvider {
             throw new RuntimeException("Error during getting entity manager");
         }
         try {
-            initProvider();
             if (entityManagers.isEmpty()) {
                 addNew();
             }
@@ -43,9 +56,13 @@ public class TestProvider {
         }
     }
 
-    private void initProvider() {
+    private synchronized void initProvider() {
         if (entityManagerFactory == null) {
-            entityManagerFactory = persistenceUnitInfo.getProvider().createContainerEntityManagerFactory(persistenceUnitInfo, params);
+            try {
+                entityManagerFactory = persistenceUnitInfo.getProvider().createContainerEntityManagerFactory(persistenceUnitInfo, params);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -53,7 +70,7 @@ public class TestProvider {
     public void begin() {
         if (used) {
             addNew();
-//            System.out.println("DODANIE TRANSAKCJI");
+            System.out.println("TransactionStart");
             if (!entityManagers.peek().getTransaction().isActive()) {
                 entityManagers.peek().getTransaction().begin();
             }
@@ -61,6 +78,8 @@ public class TestProvider {
     }
 
     public void addNew() {
+        System.out.println("+" + persistanceName);
+        System.out.println("init provider" + persistenceUnitInfo.getPersistenceUnitName());
         initProvider();
         entityManagers.push(entityManagerFactory.createEntityManager());
     }
@@ -68,12 +87,16 @@ public class TestProvider {
     public void end() {
         if (!entityManagers.isEmpty()) {
             EntityManager entityManager = entityManagers.pop();
-            if (used && entityManager.getTransaction().isActive()) {
-//                System.out.println("USUNIĘCIE TRANSAKCJI");
+            if (entityManager.getTransaction().isActive()) {
+
                 if (entityManager.getTransaction().getRollbackOnly()) {
                     entityManager.getTransaction().rollback();
+                    System.out.println("ROLLBACK");
+
                 } else {
+
                     entityManager.getTransaction().commit();
+                    System.out.println("COMMIT");
                 }
             }
 
@@ -81,6 +104,7 @@ public class TestProvider {
             entityManager.close();
 
         }
+
     }
 
     public void close() {
@@ -94,6 +118,9 @@ public class TestProvider {
     }
 
     public void setUsed(boolean used) {
+        if (this.used != used && used) {
+            System.out.println(":" + persistanceName);
+        }
         this.used = used;
     }
 
@@ -108,6 +135,12 @@ public class TestProvider {
                 }
             }
         }
+        setUsed(false);
         return ex;
+    }
+
+    @Override
+    public String toString() {
+        return "TestProvider : " + persistanceName;
     }
 }

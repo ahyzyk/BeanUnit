@@ -24,7 +24,6 @@ public class TestBeanManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestBeanManager.class);
     private BeanManager beanManager = new BeanManager();
     private Stack<TestBean> constucted = new Stack<>();
-    private TestPersistenceContext persistanceContext;
     private BeanState beanState;
 
     private TransactionStatus transactionStatus = TransactionStatus.NONE;
@@ -33,27 +32,35 @@ public class TestBeanManager {
     private Stack<TransactionStatus> transactionStatusStack;
 
     public static void callMethod(TestBean object, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
-        callMethod(object.getSpy(), object.getBeanClass(), supperBeforeClass, filter, parameters);
+        callMethod(object, object.getBean(), object.getBeanClass(), supperBeforeClass, filter, parameters);
     }
 
     public static void callMethod(Object object, Class<?> aClass, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
+        callMethod(null, object, aClass, supperBeforeClass, filter, parameters);
+    }
+
+    public static void callMethod(TestBean bean, Object object, Class<?> aClass, boolean supperBeforeClass, Function<Method, Boolean> filter, Object[] parameters) throws InvocationTargetException, IllegalAccessException {
         if (aClass == Object.class) {
             return;
         }
         if (supperBeforeClass) {
-            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter, parameters);
+            callMethod(bean, object, aClass.getSuperclass(), supperBeforeClass, filter, parameters);
         }
 
         for (Method method : aClass.getDeclaredMethods()) {
             if (filter.apply(method)) {
                 method.setAccessible(true);
-                method.invoke(object, parameters);
+                if (bean != null) {
+                    TestProxyHandler.invokeStatic(bean, object, method, parameters);
+                } else {
+                    method.invoke(object, parameters);
+                }
             }
         }
 
 
         if (!supperBeforeClass) {
-            callMethod(object, aClass.getSuperclass(), supperBeforeClass, filter, parameters);
+            callMethod(bean, object, aClass.getSuperclass(), supperBeforeClass, filter, parameters);
         }
 
 
@@ -66,6 +73,7 @@ public class TestBeanManager {
 
     public void init(Object object) {
         beanManager.clear();
+        TestPersistenceContext.getInstance().endAll();
         TransactionAttribute temp = AnnotationUtils.getAnnotation(object.getClass(), TransactionAttribute.class);
         transactionStatus = temp != null ? getTransactionStatus(temp.value()) : TransactionStatus.NONE;
         transactionStatusStack = new Stack<>();
@@ -75,12 +83,12 @@ public class TestBeanManager {
         initImplementations(object);
 
         analyzeFields(object, object.getClass());
-        beanState = BeanState.CONSTRUCT;
+
     }
 
     private void initImplementations(Object object) {
         try {
-            callMethod(object, object.getClass(), true, m -> m.isAnnotationPresent(BeanImplementations.class), new Object[]{beanManager});
+            callMethod(null, object, object.getClass(), true, m -> m.isAnnotationPresent(BeanImplementations.class), new Object[]{beanManager});
         } catch (Throwable e) {
             new RuntimeException("Error during loading implementations", e);
         }
@@ -98,8 +106,9 @@ public class TestBeanManager {
             return;
         }
         try {
-            callMethod(bean, true, m -> m.isAnnotationPresent(PostConstruct.class), null);
             bean.setConstructed();
+            callMethod(bean, true, m -> m.isAnnotationPresent(PostConstruct.class), null);
+
         } catch (Exception e) {
             throw new RuntimeException("Error during postConstruct call", e);
         }
@@ -112,7 +121,7 @@ public class TestBeanManager {
                 field.setAccessible(true);
                 if (field.isAnnotationPresent(PersistenceContext.class)) {
                     PersistenceContext persistenceAnnotation = field.getAnnotation(PersistenceContext.class);
-                    inject(field, object, new TestEntityManager(persistanceContext, persistenceAnnotation.unitName()));
+                    inject(field, object, new TestEntityManager(persistenceAnnotation.unitName()));
                 } else {
                     injectObject(object, field);
 
@@ -165,7 +174,7 @@ public class TestBeanManager {
                     callMethod(bean, false, m -> m.isAnnotationPresent(PreDestroy.class), null);
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Unable to call PreDestroy " + bean.getBeanClass());
+                throw new RuntimeException("Unable to call PreDestroy " + bean.getBeanClass(), e);
             }
         }
     }
@@ -176,31 +185,23 @@ public class TestBeanManager {
     }
 
     public void beginTransaction() {
-        persistanceContext.begin();
+        TestPersistenceContext.getInstance().begin();
 
     }
 
     public void endTransaction() {
-        persistanceContext.end();
+        TestPersistenceContext.getInstance().end();
 
     }
 
     public void endTransactions() {
-        persistanceContext.endAll();
+        TestPersistenceContext.getInstance().endAll();
 
     }
 
-
-    public TestPersistenceContext getPersistenceContext() {
-        return persistanceContext;
-    }
-
-    public void setPersistenceContext(TestPersistenceContext persistenceContext) {
-        this.persistanceContext = persistenceContext;
-    }
 
     public void closeEntityManagers() {
-        persistanceContext.close();
+        TestPersistenceContext.getInstance().close();
     }
 
     public void initStartup() {
@@ -268,4 +269,7 @@ public class TestBeanManager {
     }
 
 
+    public void setBeanState(BeanState beanState) {
+        this.beanState = beanState;
+    }
 }

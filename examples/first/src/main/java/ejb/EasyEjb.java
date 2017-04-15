@@ -17,6 +17,7 @@ public class EasyEjb {
     private Table1Manager table1Manager;
     @PostConstruct
     private void postConstruct() {
+        System.out.println("PostConstruct");
         table1Manager.create(1L, "EasyEjb postConstruct");
 
     }

@@ -25,6 +25,7 @@ import java.lang.annotation.Annotation;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static org.dbunit.Assertion.assertEquals;
@@ -35,12 +36,11 @@ import static org.dbunit.Assertion.assertEquals;
 public class DbUnitHelper {
     private final static Logger LOGGER = LoggerFactory.getLogger(DbUnitHelper.class);
     private final Class klass;
-    private final TestPersistenceContext persistanceContext;
 
 
-    public DbUnitHelper(Class klass, TestPersistenceContext persistanceContext) {
+    public DbUnitHelper(Class klass) {
         this.klass = klass;
-        this.persistanceContext = persistanceContext;
+
     }
 
 
@@ -61,15 +61,33 @@ public class DbUnitHelper {
 
     }
 
-    private void clearTable(FrameworkMethod frameworkMethod, ClearTable t) throws SQLException {
-        EntityManager entityManager = persistanceContext.get();
-        entityManager.getTransaction().begin();
-        for (String table : t.value()) {
-            entityManager.createNativeQuery("delete from " + table).executeUpdate();
+    private void executeInTransaction(Consumer<EntityManager> consumer) {
+        LOGGER.info("dbUnit PU : " + TestPersistenceContext.getInstance().getDefault());
+        TestPersistenceContext.getInstance().begin();
+        EntityManager entityManager = TestPersistenceContext.getInstance().get();
+        try {
+            consumer.accept(entityManager);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        } finally {
+            TestPersistenceContext.getInstance().end();
         }
-        entityManager.getTransaction().commit();
-        entityManager.clear();
-        persistanceContext.end();
+    }
+
+    private void clearTable(FrameworkMethod frameworkMethod, ClearTable t) throws SQLException {
+        System.out.println("ClearTable");
+        executeInTransaction(entityManager ->
+        {
+            for (String table : t.value()) {
+                System.out.println("delete table " + table);
+                entityManager.createNativeQuery("delete from " + table).executeUpdate();
+            }
+            entityManager.flush();
+            entityManager.clear();
+        });
+        System.out.println("ClearTable - end");
+
     }
 
 
@@ -79,18 +97,24 @@ public class DbUnitHelper {
             try {
                 consumer.accept(method, config);
             } catch (Exception e) {
+                e.printStackTrace();
                 throw new RuntimeException(String.format("Error during execution of %s for method %s", annotation.getName(), method.getName()), e);
             }
         }
     }
 
 
-    private void shouldMatchDataSet(FrameworkMethod method, ShouldMatchDataSet annotation) throws DatabaseUnitException, IOException {
-        EntityManager entityManager = persistanceContext.get();
-        for (String file : annotation.value()) {
-            checkData(entityManager, file, annotation);
-        }
-        persistanceContext.end();
+    private void shouldMatchDataSet(FrameworkMethod method, ShouldMatchDataSet annotation) {
+        executeInTransaction(entityManager -> {
+            for (String file : annotation.value()) {
+                try {
+                    checkData(entityManager, file, annotation);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
 
     }
 
@@ -182,13 +206,18 @@ public class DbUnitHelper {
     }
 
     private void usingDataSet(FrameworkMethod method, UsingDataSet annotation) throws DataSetException, IllegalAccessException, InstantiationException {
-        EntityManager entityManager = persistanceContext.get();
-        entityManager.getTransaction().begin();
-        for (String file : annotation.value()) {
-            loadData(entityManager, file);
-        }
-        entityManager.getTransaction().commit();
-        persistanceContext.end();
+        executeInTransaction(entityManager ->
+        {
+            for (String file : annotation.value()) {
+                System.out.println("inset " + file);
+                try {
+                    loadData(entityManager, file);
+                } catch (DataSetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
     }
 
     private void loadData(EntityManager entityManager, String file) throws DataSetException {
@@ -196,6 +225,7 @@ public class DbUnitHelper {
         for (String table : dataSet.getTableNames()) {
 
             entityManager.createNativeQuery("delete from " + table).executeUpdate();
+            entityManager.flush();
             entityManager.clear();
 
             ITable data = dataSet.getTable(table);

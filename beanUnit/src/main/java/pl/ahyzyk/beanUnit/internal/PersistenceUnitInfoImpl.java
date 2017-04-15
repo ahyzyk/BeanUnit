@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.ClassTransformer;
@@ -39,6 +41,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     private Map<String, Consumer<String>> consumerMap = new HashMap();
     private String jtaName;
+    private EntityManagerFactory entityFactory;
 
     public PersistenceUnitInfoImpl(String persistenceUnitName, String transactionType) {
         this.persistenceUnitName = persistenceUnitName;
@@ -64,6 +67,17 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
             LOGGER.warn("Unable to create instance for provider " + className);
             return null;
         }
+    }
+
+    public EntityManager getEntityManager() {
+        return getEntityFactory().createEntityManager();
+    }
+
+    public EntityManagerFactory getEntityFactory() {
+        if (this.entityFactory == null) {
+            this.entityFactory = getProvider().createContainerEntityManagerFactory(this, new HashMap());
+        }
+        return getEntityFactory();
     }
 
     public Consumer<String> getConsumer(String name) {

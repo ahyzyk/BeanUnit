@@ -22,48 +22,34 @@ import java.util.stream.Collectors;
 public class TestPersistenceContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestPersistenceContext.class);
 
-    private static Map<String, TestProvider> providerMap = new HashMap<>();
+    private static TestPersistenceContext instance;
+    private Map<String, TestProvider> providerMap = new HashMap<>();
     private String defaultPersistence;
     private Stack<EntityManager> entityManagers = new Stack<>();
 
-    public TestPersistenceContext() {
+
+    private TestPersistenceContext() {
     }
 
-    public static TestPersistenceContext init(Class<?> klass) {
-
-        TestPersistenceContext result = new TestPersistenceContext();
-
-        Map<String, PersistenceUnitInfoImpl> providers;
-        try {
-            providers = findProviders(klass.getClassLoader().getResources("META-INF/persistence.xml"));
-        } catch (Exception e) {
-            throw new RuntimeException("Error during reading persistence.xml", e);
+    public static TestPersistenceContext getInstance() {
+        if (instance == null) {
+            instance = new TestPersistenceContext();
+            instance.init();
         }
+        return instance;
+    }
 
-        for (Map.Entry<String, PersistenceUnitInfoImpl> entry : providers.entrySet()) {
-            Map<String, String> params = new HashMap<>();
-            String copyClass = entry.getValue().getProperties().getProperty("beanUnit.copyClass", "");
-            if (!copyClass.isEmpty()) {
-                for (String className : providers.get(copyClass).getManagedClassNames()) {
-                    entry.getValue().getManagedClassNames().add(className);
-                }
-            }
-
-            result.providerMap.put(entry.getKey(), new TestProvider(entry.getKey(), entry.getValue(), params));
-        }
-
-        if (result.providerMap.size() > 0) {
+    public static void setPU(Class klass) {
+        if (getInstance().providerMap.size() > 0) {
             String defaultPersistence = "";
             if (klass.isAnnotationPresent(TestConfiguration.class)) {
-                defaultPersistence = klass.getAnnotation(TestConfiguration.class).persistenceUnitName();
+                defaultPersistence = ((TestConfiguration) klass.getAnnotation(TestConfiguration.class)).persistenceUnitName();
             }
             if (defaultPersistence.length() == 0) {
-                defaultPersistence = result.providerMap.keySet().stream().findFirst().get();
+                defaultPersistence = getInstance().providerMap.keySet().stream().findFirst().get();
             }
-            result.defaultPersistence = defaultPersistence;
+            getInstance().defaultPersistence = defaultPersistence;
         }
-
-        return result;
     }
 
     private static Map<String, PersistenceUnitInfoImpl> findProviders(Enumeration<URL> resource) throws ClassNotFoundException, IllegalAccessException, InstantiationException, ParserConfigurationException, IOException, SAXException {
@@ -107,7 +93,6 @@ public class TestPersistenceContext {
         return providers;
     }
 
-
     private static void consumeNode(NodeList nodeList, Consumer<Node> consumer) {
         for (int x = 0; x < nodeList.getLength(); x++) {
             Node item = nodeList.item(x);
@@ -118,7 +103,6 @@ public class TestPersistenceContext {
         }
     }
 
-
     private static void findNode(NodeList nodeList, String node, Consumer<Node> consumer) {
         for (int x = 0; x < nodeList.getLength(); x++) {
             Node item = nodeList.item(x);
@@ -128,12 +112,45 @@ public class TestPersistenceContext {
         }
     }
 
+    public TestPersistenceContext init() {
+
+        TestPersistenceContext result = new TestPersistenceContext();
+
+        Map<String, PersistenceUnitInfoImpl> providers;
+        try {
+            providers = findProviders(this.getClass().getClassLoader().getResources("META-INF/persistence.xml"));
+        } catch (Exception e) {
+            throw new RuntimeException("Error during reading persistence.xml", e);
+        }
+
+        for (Map.Entry<String, PersistenceUnitInfoImpl> entry : providers.entrySet()) {
+            Map<String, String> params = new HashMap<>();
+            String copyClass = entry.getValue().getProperties().getProperty("beanUnit.copyClass", "");
+            if (!copyClass.isEmpty()) {
+                for (String className : providers.get(copyClass).getManagedClassNames()) {
+                    entry.getValue().getManagedClassNames().add(className);
+                }
+            }
+            providerMap.put(entry.getKey(), new TestProvider(result, entry.getKey(), entry.getValue(), params));
+        }
+
+
+        return result;
+    }
+
     public void begin() {
-        providerMap.values().stream().forEach(p -> p.begin());
+        setUsed("");
+        providerMap.entrySet().forEach(e -> {
+            if (!e.getKey().isEmpty())
+                e.getValue().begin();
+        });
     }
 
     public void end() {
-        providerMap.values().stream().forEach(p -> p.end());
+        providerMap.entrySet().forEach(e -> {
+            if (!e.getKey().isEmpty())
+                e.getValue().end();
+        });
     }
 
     public void endAll() {
@@ -165,6 +182,14 @@ public class TestPersistenceContext {
     }
 
     private TestProvider getTestProvider(String s) {
-        return providerMap.get(s.isEmpty() ? defaultPersistence : s + "_TEST");
+
+        String key = s.isEmpty() ? defaultPersistence : s;
+        TestProvider result = providerMap.get(key);
+
+        return result;
+    }
+
+    public String getDefault() {
+        return defaultPersistence;
     }
 }

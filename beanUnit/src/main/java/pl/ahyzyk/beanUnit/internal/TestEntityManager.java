@@ -14,18 +14,19 @@ import java.util.Map;
  * Created by ahyzyk on 14.04.2017.
  */
 public class TestEntityManager implements EntityManager {
-    private final TestPersistenceContext persistenceContext;
+
     private final String persistenceUnit;
+    private EntityManager entityManager = null;
 
 
-    public TestEntityManager(TestPersistenceContext persistenceContext, String persistenceUnit) {
-        this.persistenceContext = persistenceContext;
+    public TestEntityManager(String persistenceUnit) {
+
         this.persistenceUnit = persistenceUnit;
-        persistenceContext.setUsed(persistenceUnit);
+        TestPersistenceContext.getInstance().setUsed(persistenceUnit);
     }
 
     private EntityManager getEntityManager() {
-        return persistenceContext.get(persistenceUnit);
+        return TestPersistenceContext.getInstance().get("");
     }
 
     @Override
