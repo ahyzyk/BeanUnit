@@ -97,9 +97,17 @@ public class TestProvider {
         this.used = used;
     }
 
-    public void endAll() {
+    public Exception endAll() {
+        Exception ex = null;
         while (!entityManagers.isEmpty()) {
-            end();
+            try {
+                end();
+            } catch (Exception ex2) {
+                if (ex == null) {
+                    ex = ex2;
+                }
+            }
         }
+        return ex;
     }
 }

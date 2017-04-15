@@ -15,10 +15,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -140,7 +137,10 @@ public class TestPersistenceContext {
     }
 
     public void endAll() {
-        providerMap.values().stream().forEach(p -> p.endAll());
+        Optional<Exception> ex = providerMap.values().stream().map(TestProvider::endAll).filter(Objects::nonNull).findFirst();
+        if (ex.isPresent()) {
+            throw new RuntimeException("Error during classing transactions", ex.get());
+        }
     }
 
     public void close() {
