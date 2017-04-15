@@ -220,7 +220,6 @@ public class TestBeanManager {
         if (transactionStatus == TransactionStatus.CREATE_NEW) {
             beginTransaction();
         }
-        LOGGER.info("TransactionStatus in:" + transactionStatus);
 
     }
 
@@ -264,7 +263,7 @@ public class TestBeanManager {
         if (transactionStatus == TransactionStatus.CREATE_NEW) {
             endTransaction();
         }
-        LOGGER.info("TransactionStatus out:" + transactionStatus);
+
         transactionStatus = transactionStatusStack.pop();
     }
 
