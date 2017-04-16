@@ -62,7 +62,6 @@ public class DbUnitHelper {
     }
 
     private void executeInTransaction(Consumer<EntityManager> consumer) {
-        LOGGER.info("dbUnit PU : " + TestPersistenceContext.getInstance().getDefault());
         TestPersistenceContext.getInstance().begin();
         EntityManager entityManager = TestPersistenceContext.getInstance().get();
         try {
@@ -76,17 +75,15 @@ public class DbUnitHelper {
     }
 
     private void clearTable(FrameworkMethod frameworkMethod, ClearTable t) throws SQLException {
-        System.out.println("ClearTable");
         executeInTransaction(entityManager ->
         {
             for (String table : t.value()) {
-                System.out.println("delete table " + table);
+                LOGGER.info("Clean table : " + table);
                 entityManager.createNativeQuery("delete from " + table).executeUpdate();
             }
             entityManager.flush();
             entityManager.clear();
         });
-        System.out.println("ClearTable - end");
 
     }
 
@@ -105,6 +102,7 @@ public class DbUnitHelper {
 
 
     private void shouldMatchDataSet(FrameworkMethod method, ShouldMatchDataSet annotation) {
+        LOGGER.info("ShouldMatchDataset");
         executeInTransaction(entityManager -> {
             for (String file : annotation.value()) {
                 try {
@@ -206,10 +204,11 @@ public class DbUnitHelper {
     }
 
     private void usingDataSet(FrameworkMethod method, UsingDataSet annotation) throws DataSetException, IllegalAccessException, InstantiationException {
+
         executeInTransaction(entityManager ->
         {
             for (String file : annotation.value()) {
-                System.out.println("inset " + file);
+                LOGGER.info("Load data from: " + file);
                 try {
                     loadData(entityManager, file);
                 } catch (DataSetException e) {
@@ -223,7 +222,7 @@ public class DbUnitHelper {
     private void loadData(EntityManager entityManager, String file) throws DataSetException {
         IDataSet dataSet = createDataSet(file);
         for (String table : dataSet.getTableNames()) {
-
+            LOGGER.info("Load table : " + table);
             entityManager.createNativeQuery("delete from " + table).executeUpdate();
             entityManager.flush();
             entityManager.clear();

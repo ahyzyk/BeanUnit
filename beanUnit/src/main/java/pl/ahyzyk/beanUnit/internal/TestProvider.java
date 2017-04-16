@@ -70,7 +70,6 @@ public class TestProvider {
     public void begin() {
         if (used) {
             addNew();
-            System.out.println("TransactionStart");
             if (!entityManagers.peek().getTransaction().isActive()) {
                 entityManagers.peek().getTransaction().begin();
             }
@@ -78,8 +77,6 @@ public class TestProvider {
     }
 
     public void addNew() {
-        System.out.println("+" + persistanceName);
-        System.out.println("init provider" + persistenceUnitInfo.getPersistenceUnitName());
         initProvider();
         entityManagers.push(entityManagerFactory.createEntityManager());
     }
@@ -91,12 +88,8 @@ public class TestProvider {
 
                 if (entityManager.getTransaction().getRollbackOnly()) {
                     entityManager.getTransaction().rollback();
-                    System.out.println("ROLLBACK");
-
                 } else {
-
                     entityManager.getTransaction().commit();
-                    System.out.println("COMMIT");
                 }
             }
 
@@ -118,9 +111,6 @@ public class TestProvider {
     }
 
     public void setUsed(boolean used) {
-        if (this.used != used && used) {
-            System.out.println(":" + persistanceName);
-        }
         this.used = used;
     }
 

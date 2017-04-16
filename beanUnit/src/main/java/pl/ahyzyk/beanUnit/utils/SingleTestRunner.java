@@ -65,6 +65,7 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
 
         try {
             onStart();
+            LOGGER.info("Testing...");
             statement.evaluate();
             onFinish();
         } catch (AssumptionViolatedException var10) {
@@ -75,37 +76,30 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
             eachNotifier.addFailure(var11);
         } finally {
             onFinishFinally();
-
-            LOGGER.info("**********************************");
-            LOGGER.info("END OF: " + currentMethod.getName());
-            LOGGER.info("**********************************");
             eachNotifier.fireTestFinished();
         }
 
     }
 
     private void onFinish() {
-        LOGGER.info("DestroyBeans");
         tryToExecute("Destroy beans", eachNotifier, beanManager::destroy);
-        LOGGER.info("ShouldMatchDataset");
         tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterMethod(currentMethod));
     }
 
     private void onFinishFinally() throws InvocationTargetException, IllegalAccessException {
-        LOGGER.info("Close all transactions");
         tryToExecute("End of transaction", eachNotifier, beanManager::endTransactions);
 
         tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterFinallyMethod(currentMethod));
-        LOGGER.info("AfterDBUnit");
+
         tryToExecute("AfterDBUnit", eachNotifier, () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
 
     }
 
     private void onStart() throws InvocationTargetException, IllegalAccessException {
 
-        LOGGER.info("**********************************");
-        LOGGER.info("Starting: " + currentMethod.getName());
-        LOGGER.info("**********************************");
+        System.out.println("##################################################");
+        System.out.println("Starting: " + klass.getName() + "\nTest:" + currentMethod.getName());
+        System.out.println("##################################################");
         LOGGER.info("Persistence Unit : " + TestPersistenceContext.getInstance().getDefault());
         LOGGER.info("Initialize beans");
         dbUnitHelper = new DbUnitHelper(klass);
@@ -113,9 +107,8 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
         beanManager.init(targetObject);
 
         TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(BeforeDBUnit.class), null);
-        LOGGER.info("Clear tables before");
         tryToExecute("DbUnit clear method ", currentNotifier, () -> dbUnitHelper.clearMethod(currentMethod));
-        LOGGER.info("Load data");
+
         tryToExecute("DbUnit load method ", currentNotifier, () -> dbUnitHelper.loadMethod(currentMethod));
         beanManager.setBeanState(BeanState.CONSTRUCT);
         beanManager.initStartup();
