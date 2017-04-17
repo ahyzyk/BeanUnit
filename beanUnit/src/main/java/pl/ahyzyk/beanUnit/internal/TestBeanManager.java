@@ -161,7 +161,7 @@ public class TestBeanManager {
             TestBean bean = new TestBean(result, this);
             beanManager.add(clazz, bean);
             analyzeFields(bean.getSpy(), bean.getBeanClass());
-            analyzeFields(bean.getObject(), bean.getBeanClass());
+            analyzeFields(bean.getBean(), bean.getBeanClass());
         }
         return beanManager.get(clazz);
     }
