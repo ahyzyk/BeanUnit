@@ -97,7 +97,7 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
     private void onStart() throws InvocationTargetException, IllegalAccessException {
 
         System.out.println("##################################################");
-        System.out.println("Starting: " + klass.getName() + "\nTest:" + currentMethod.getName());
+        System.out.println("Starting: " + klass.getName() + "." + currentMethod.getName());
         System.out.println("##################################################");
         LOGGER.info("Persistence Unit : " + TestPersistenceContext.getInstance().getDefault());
         LOGGER.info("Initialize beans");
