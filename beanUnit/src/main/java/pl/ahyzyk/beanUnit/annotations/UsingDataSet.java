@@ -10,4 +10,6 @@ import java.lang.annotation.*;
 @Inherited
 public @interface UsingDataSet {
     String[] value();
+
+    boolean columnSensing() default true;
 }

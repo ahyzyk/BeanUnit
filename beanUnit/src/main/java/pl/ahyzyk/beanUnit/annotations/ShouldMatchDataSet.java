@@ -12,5 +12,6 @@ public @interface ShouldMatchDataSet {
 
     String[] value() default "";
 
+    boolean columnSensing() default true;
     boolean ordered() default false;
 }

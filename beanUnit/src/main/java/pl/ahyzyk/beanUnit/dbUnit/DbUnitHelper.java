@@ -155,7 +155,7 @@ public class DbUnitHelper {
     }
 
     private void checkData(EntityManager entityManager, String file, ShouldMatchDataSet annotation) throws DatabaseUnitException, IOException {
-        IDataSet dataSet = createDataSet(file);
+        IDataSet dataSet = createDataSet(file, annotation.columnSensing());
         boolean error = false;
 
         for (String table : dataSet.getTableNames()) {
@@ -172,8 +172,6 @@ public class DbUnitHelper {
                     String[] columns = tableInfo.getColumnList().toArray(new String[]{});
                     SortedTable expected = new SortedTable(matchTable, columns);
                     SortedTable actual = new SortedTable(result, expected.getTableMetaData());
-//                    printTable(expected);
-//                    printTable(actual);
                     assertEquals(expected, actual);
                 } else {
                     assertEquals(matchTable, result);
@@ -210,7 +208,7 @@ public class DbUnitHelper {
             for (String file : annotation.value()) {
                 LOGGER.info("Load data from: " + file);
                 try {
-                    loadData(entityManager, file);
+                    loadData(entityManager, file, annotation);
                 } catch (DataSetException e) {
                     throw new RuntimeException(e);
                 }
@@ -219,8 +217,8 @@ public class DbUnitHelper {
 
     }
 
-    private void loadData(EntityManager entityManager, String file) throws DataSetException {
-        IDataSet dataSet = createDataSet(file);
+    private void loadData(EntityManager entityManager, String file, UsingDataSet annotation) throws DataSetException {
+        IDataSet dataSet = createDataSet(file, annotation.columnSensing());
         for (String table : dataSet.getTableNames()) {
             LOGGER.info("Load table : " + table);
             entityManager.createNativeQuery("delete from " + table).executeUpdate();
@@ -245,9 +243,10 @@ public class DbUnitHelper {
     }
 
 
-    private IDataSet createDataSet(String file) throws DataSetException {
+    private IDataSet createDataSet(String file, boolean columnSensing) throws DataSetException {
         InputStream stream = this.getClass().getClassLoader().getResourceAsStream(file);
         FlatXmlProducer producer = new FlatXmlProducer(new InputSource(stream));
+        producer.setColumnSensing(columnSensing);
         return new CachedDataSet(producer);
     }
 
