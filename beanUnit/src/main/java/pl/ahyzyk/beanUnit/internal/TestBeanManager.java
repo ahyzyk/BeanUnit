@@ -23,7 +23,7 @@ import static pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils.getAnnotation
 public class TestBeanManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestBeanManager.class);
     private BeanManager beanManager = new BeanManager();
-    private Stack<TestBean> constucted = new Stack<>();
+    private Stack<TestBean> constructed = new Stack<>();
     private BeanState beanState;
 
     private TransactionStatus transactionStatus = TransactionStatus.NONE;
@@ -78,7 +78,7 @@ public class TestBeanManager {
         transactionStatus = temp != null ? getTransactionStatus(temp.value()) : TransactionStatus.NONE;
         transactionStatusStack = new Stack<>();
         beanState = BeanState.CREATE;
-        constucted.clear();
+        constructed.clear();
         initDefaultInjects();
         initImplementations(object);
 
@@ -166,8 +166,8 @@ public class TestBeanManager {
     }
 
     public void destroy() {
-        while (!constucted.isEmpty()) {
-            TestBean bean = constucted.pop();
+        while (!constructed.isEmpty()) {
+            TestBean bean = constructed.pop();
             try {
                 //singleton shouldn't be destroyed
                 if (getAnnotation(bean.getBeanClass(), Singleton.class) == null) {
@@ -181,7 +181,7 @@ public class TestBeanManager {
 
 
     public void addConstructed(TestBean testBean) {
-        constucted.add(testBean);
+        constructed.add(testBean);
     }
 
     public void beginTransaction() {

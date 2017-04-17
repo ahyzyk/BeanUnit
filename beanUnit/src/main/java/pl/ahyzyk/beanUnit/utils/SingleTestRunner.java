@@ -24,20 +24,20 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class SingleTestRunner extends BlockJUnit4ClassRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(SingleTestRunner.class);
-    final Object targetObject;
+    private final Object targetObject;
     private final Class<?> klass;
     private final TestBeanManager beanManager;
-    public EachTestNotifier eachNotifier;
-    public Description description;
-    public FrameworkMethod currentMethod;
-    public RunNotifier currentNotifier;
+    private EachTestNotifier eachNotifier;
+
+    private FrameworkMethod currentMethod;
     private DbUnitHelper dbUnitHelper;
 
-    public SingleTestRunner(Class<?> klass, TestBeanManager beanManager) throws Exception {
+
+    public SingleTestRunner(Class<?> klass) throws Exception {
         super(klass);
         this.klass = klass;
         targetObject = klass.newInstance();
-        this.beanManager = beanManager;
+        this.beanManager = new TestBeanManager();
 
     }
 
@@ -49,7 +49,8 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
 
 
     public void runTest(FrameworkMethod method, RunNotifier notifier) throws InvocationTargetException, IllegalAccessException {
-        description = this.describeChild(method);
+        Description description = this.describeChild(method);
+
         if (this.isIgnored(method)) {
             notifier.fireTestIgnored(description);
         } else {
@@ -58,7 +59,7 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
 
     }
 
-    protected final void runTestLeaf(Statement statement, Description description, RunNotifier notifier) throws InvocationTargetException, IllegalAccessException {
+    private void runTestLeaf(Statement statement, Description description, RunNotifier notifier) throws InvocationTargetException, IllegalAccessException {
         TestPersistenceContext.setPU(klass);
         eachNotifier = new EachTestNotifier(notifier, description);
         eachNotifier.fireTestStarted();
@@ -82,16 +83,14 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
     }
 
     private void onFinish() {
-        tryToExecute("Destroy beans", eachNotifier, beanManager::destroy);
-        tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterMethod(currentMethod));
+        tryToExecute("Destroy beans", beanManager::destroy);
+        tryToExecute("DbUnit after method ", () -> dbUnitHelper.afterMethod(currentMethod));
     }
 
     private void onFinishFinally() throws InvocationTargetException, IllegalAccessException {
-        tryToExecute("End of transaction", eachNotifier, beanManager::endTransactions);
-
-        tryToExecute("DbUnit after method ", eachNotifier, () -> dbUnitHelper.afterFinallyMethod(currentMethod));
-
-        tryToExecute("AfterDBUnit", eachNotifier, () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
+        tryToExecute("End of transaction", beanManager::endTransactions);
+        tryToExecute("DbUnit after method ", () -> dbUnitHelper.afterFinallyMethod(currentMethod));
+        tryToExecute("AfterDBUnit", () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
 
     }
 
@@ -107,27 +106,27 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
         beanManager.init(targetObject);
 
         TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(BeforeDBUnit.class), null);
-        tryToExecute("DbUnit clear method ", currentNotifier, () -> dbUnitHelper.clearMethod(currentMethod));
+        tryToExecute("DbUnit clear method ", () -> dbUnitHelper.clearMethod(currentMethod));
 
-        tryToExecute("DbUnit load method ", currentNotifier, () -> dbUnitHelper.loadMethod(currentMethod));
+        tryToExecute("DbUnit load method ", () -> dbUnitHelper.loadMethod(currentMethod));
         beanManager.setBeanState(BeanState.CONSTRUCT);
         beanManager.initStartup();
     }
 
-    private void tryToExecute(String message, EachTestNotifier notifier, Runnable consumer) {
+    private void tryToExecute(String message, Runnable consumer) {
         try {
             consumer.run();
         } catch (Throwable ex) {
-            notifier.addFailure(ex);
+            eachNotifier.addFailure(ex);
         }
     }
 
-    public void tryToExecute(String message, RunNotifier notifier, Runnable consumer) {
+    public void tryToExecute(String message, RunNotifier runNotifier, Runnable consumer) {
         try {
             consumer.run();
         } catch (Throwable ex) {
             ex.printStackTrace();
-            notifier.fireTestFailure(new Failure(Description.createTestDescription(klass, currentMethod.getName() + "-" + message), ex));
+            runNotifier.fireTestFailure(new Failure(Description.createTestDescription(klass, currentMethod.getName() + "-" + message), ex));
             throw new RuntimeException("Error during : " + message, ex);
         }
     }
@@ -143,4 +142,6 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
     public interface Runnable {
         void run() throws Exception;
     }
+
+
 }
