@@ -10,7 +10,7 @@ import java.util.Arrays;
  */
 public class DefaultTransactionAttribute implements TransactionAttribute {
     private static DefaultTransactionAttribute instanceEjb = new DefaultTransactionAttribute(TransactionAttributeType.REQUIRED);
-    private static DefaultTransactionAttribute instanceView = new DefaultTransactionAttribute(TransactionAttributeType.NEVER);
+    private static DefaultTransactionAttribute instanceView = new DefaultTransactionAttribute(TransactionAttributeType.SUPPORTS);
 
     private TransactionAttributeType type;
 
