@@ -138,11 +138,11 @@ public class TestPersistenceContext {
         return result;
     }
 
-    public void begin() {
+    public void begin(boolean transactional) {
         setUsed("");
         providerMap.entrySet().forEach(e -> {
             if (!e.getKey().isEmpty())
-                e.getValue().begin();
+                e.getValue().createEntityManager(transactional);
         });
     }
 

@@ -67,10 +67,10 @@ public class TestProvider {
     }
 
 
-    public void begin() {
+    public void createEntityManager(boolean transactional) {
         if (used) {
             addNew();
-            if (!entityManagers.peek().getTransaction().isActive()) {
+            if (transactional && !entityManagers.peek().getTransaction().isActive()) {
                 entityManagers.peek().getTransaction().begin();
             }
         }

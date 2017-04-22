@@ -1,12 +1,15 @@
 package pl.ahyzyk.beanUnit.internal;
 
 import org.mockito.cglib.proxy.Enhancer;
+import pl.ahyzyk.beanUnit.annotations.defaultAnotations.DefaultTransactionAttribute;
+import pl.ahyzyk.beanUnit.annotations.defaultAnotations.DefaultTransactionManagement;
 import pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils;
 
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 import static org.mockito.Mockito.spy;
 
@@ -50,22 +53,13 @@ public class TestBean {
 
     private void findOutTransactionalAttributeType(Object object) {
         transactionAttribute = TransactionAttributeType.SUPPORTS;
-        TransactionAttribute temp = AnnotationUtils.getAnnotation(beanClass, TransactionAttribute.class);
-        if (temp != null) {
+        TransactionManagementType type = AnnotationUtils.getAnnotation(beanClass, TransactionManagement.class, DefaultTransactionManagement.getInstance()).value();
+        if (type == TransactionManagementType.CONTAINER) {
+            TransactionAttribute temp = AnnotationUtils.getAnnotation(beanClass, TransactionAttribute.class, DefaultTransactionAttribute.getInstance(beanClass));
             transactionAttribute = temp.value();
-            return;
+        } else {
+            transactionAttribute = TransactionAttributeType.NOT_SUPPORTED;
         }
-
-        long count = Arrays.stream(beanClass.getDeclaredAnnotations())
-                .filter(c -> c.annotationType().getName().startsWith("javax.ejb."))
-                .count();
-        if (count > 0) {
-            transactionAttribute = TransactionAttributeType.REQUIRED;
-            return;
-        }
-        transactionAttribute = TransactionAttributeType.SUPPORTS;
-
-
     }
 
     private void createBean() {

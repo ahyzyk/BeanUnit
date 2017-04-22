@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.ahyzyk.beanUnit.annotations.BeanImplementations;
 import pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils;
+import pl.ahyzyk.beanUnit.beans.TestUserTransaction;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -11,6 +12,7 @@ import javax.annotation.Resource;
 import javax.ejb.*;
 import javax.inject.Inject;
 import javax.persistence.PersistenceContext;
+import javax.transaction.UserTransaction;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -99,6 +101,7 @@ public class TestBeanManager {
         beanManager.add(Long.class, new TestBean(1L));
         beanManager.add(String.class, new TestBean(""));
         beanManager.add(BeanManager.class, new TestBean(beanManager));
+        beanManager.addImplementation(UserTransaction.class, TestUserTransaction.class);
     }
 
     public void constructBean(TestBean bean) {
@@ -185,12 +188,14 @@ public class TestBeanManager {
         constructed.add(testBean);
     }
 
-    public void beginTransaction() {
-        TestPersistenceContext.getInstance().begin();
+    public void beginTransaction(boolean transactional) {
+        System.out.println("START");
+        TestPersistenceContext.getInstance().begin(transactional);
 
     }
 
     public void endTransaction() {
+        System.out.println("END");
         TestPersistenceContext.getInstance().end();
 
     }
@@ -216,23 +221,14 @@ public class TestBeanManager {
     }
 
 
-    public void pushTransaction(TransactionAttributeType transactionAttributeType) {
-        transactionStatusStack.push(transactionStatus);
-        transactionStatus = getTransactionStatus(transactionAttributeType);
-        if (transactionStatus == TransactionStatus.CREATE_NEW) {
-            beginTransaction();
-        }
-
-    }
-
     private TransactionStatus getTransactionStatus(TransactionAttributeType transactionAttributeType) {
         switch (transactionAttributeType) {
             case MANDATORY:
-                if (!transactionStatus.isTransaction()) {
+                if (!transactionStatus.isTransactional()) {
                     throw new RuntimeException("MANDATORY without transaction");
                 }
             case REQUIRED:
-                if (!transactionStatus.isTransaction()) {
+                if (!transactionStatus.isTransactional()) {
                     return TransactionStatus.CREATE_NEW;
                 } else {
                     return TransactionStatus.ACTIVE;
@@ -244,14 +240,14 @@ public class TestBeanManager {
             case SUPPORTS:
                 break;
             case NOT_SUPPORTED:
-                if (transactionStatus.isTransaction()) {
+                if (transactionStatus.isTransactional()) {
                     return transactionStatus.TO_NONE;
                 } else {
                     return TransactionStatus.NONE;
                 }
 
             case NEVER:
-                if (transactionStatus.isTransaction()) {
+                if (transactionStatus.isTransactional()) {
                     throw new RuntimeException("NEVER with transaction");
                 }
                 return TransactionStatus.NONE;
@@ -262,11 +258,21 @@ public class TestBeanManager {
 
 
     public void popTransaction() {
-        if (transactionStatus == TransactionStatus.CREATE_NEW) {
+        System.out.println("-" + transactionStatus);
+        if (transactionStatus.isCreateNewEntityManager()) {
             endTransaction();
         }
-
         transactionStatus = transactionStatusStack.pop();
+    }
+
+    public void pushTransaction(TransactionAttributeType transactionAttributeType) {
+        transactionStatusStack.push(transactionStatus);
+        transactionStatus = getTransactionStatus(transactionAttributeType);
+        System.out.println("+" + transactionStatus);
+        if (transactionStatus.isCreateNewEntityManager()) {
+            beginTransaction(transactionStatus.isTransactional());
+        }
+
     }
 
 

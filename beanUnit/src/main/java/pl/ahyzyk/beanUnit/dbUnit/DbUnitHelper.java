@@ -62,7 +62,7 @@ public class DbUnitHelper {
     }
 
     private void executeInTransaction(Consumer<EntityManager> consumer) {
-        TestPersistenceContext.getInstance().begin();
+        TestPersistenceContext.getInstance().begin(true);
         EntityManager entityManager = TestPersistenceContext.getInstance().get();
         try {
             consumer.accept(entityManager);

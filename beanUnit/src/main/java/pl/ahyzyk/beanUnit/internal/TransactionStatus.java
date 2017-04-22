@@ -4,17 +4,23 @@ package pl.ahyzyk.beanUnit.internal;
  * Created by ahyzyk on 14.04.2017.
  */
 public enum TransactionStatus {
-    ACTIVE(true),
-    CREATE_NEW(true),
-    NONE(false),
-    TO_NONE(false);
-    private final boolean transaction;
+    ACTIVE(true, false),
+    CREATE_NEW(true, true),
+    NONE(false, false),
+    TO_NONE(false, true);
+    private final boolean transactional;
+    private final boolean createNewEntityManager;
 
-    TransactionStatus(Boolean transaction) {
-        this.transaction = transaction;
+    TransactionStatus(boolean transactional, boolean createNewEntityManager) {
+        this.transactional = transactional;
+        this.createNewEntityManager = createNewEntityManager;
     }
 
-    public boolean isTransaction() {
-        return transaction;
+    public boolean isTransactional() {
+        return transactional;
+    }
+
+    public boolean isCreateNewEntityManager() {
+        return createNewEntityManager;
     }
 }
