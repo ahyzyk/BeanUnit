@@ -255,7 +255,6 @@ public class TestBeanManager {
 
 
     public void popTransaction() {
-        System.out.println("-" + transactionStatus);
         if (transactionStatus.isCreateNewEntityManager()) {
             endTransaction();
         }
@@ -265,7 +264,6 @@ public class TestBeanManager {
     public void pushTransaction(TransactionAttributeType transactionAttributeType) {
         transactionStatusStack.push(transactionStatus);
         transactionStatus = getTransactionStatus(transactionAttributeType);
-        System.out.println("+" + transactionStatus);
         if (transactionStatus.isCreateNewEntityManager()) {
             beginTransaction(transactionStatus.isTransactional());
         }
