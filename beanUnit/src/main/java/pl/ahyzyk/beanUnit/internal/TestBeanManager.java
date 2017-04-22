@@ -189,15 +189,12 @@ public class TestBeanManager {
     }
 
     public void beginTransaction(boolean transactional) {
-        System.out.println("START");
         TestPersistenceContext.getInstance().begin(transactional);
 
     }
 
     public void endTransaction() {
-        System.out.println("END");
         TestPersistenceContext.getInstance().end();
-
     }
 
     public void endTransactions() {

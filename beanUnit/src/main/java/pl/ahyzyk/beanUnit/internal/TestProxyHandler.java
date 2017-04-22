@@ -19,7 +19,6 @@ public class TestProxyHandler implements InvocationHandler {
 //        System.out.println("proxy:" +method);
         bean.constructBean();
         method.setAccessible(true);
-        System.out.println("Start method " + method);
         if (method.getDeclaringClass() != Object.class) {
             bean.manager.pushTransaction(bean.getTransactionAttributeType(method));
         }
@@ -34,7 +33,6 @@ public class TestProxyHandler implements InvocationHandler {
             if (method.getDeclaringClass() != Object.class) {
                 bean.manager.popTransaction();
             }
-            System.out.println("End method " + method);
         }
         return result;
     }
