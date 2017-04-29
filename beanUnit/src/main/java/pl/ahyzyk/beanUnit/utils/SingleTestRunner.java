@@ -16,6 +16,7 @@ import pl.ahyzyk.beanUnit.dbUnit.DbUnitHelper;
 import pl.ahyzyk.beanUnit.internal.BeanState;
 import pl.ahyzyk.beanUnit.internal.TestBeanManager;
 import pl.ahyzyk.beanUnit.internal.TestPersistenceContext;
+import pl.ahyzyk.beanUnit.internal.beans.BeanContext;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -26,7 +27,6 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(SingleTestRunner.class);
     private final Object targetObject;
     private final Class<?> klass;
-    private final TestBeanManager beanManager;
     private EachTestNotifier eachNotifier;
 
     private FrameworkMethod currentMethod;
@@ -37,7 +37,7 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
         super(klass);
         this.klass = klass;
         targetObject = klass.newInstance();
-        this.beanManager = new TestBeanManager();
+        BeanContext.setTestBeanManager(new TestBeanManager());
 
     }
 
@@ -83,12 +83,12 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
     }
 
     private void onFinish() {
-        tryToExecute("Destroy beans", beanManager::destroy);
+        tryToExecute("Destroy beans", BeanContext.getTestBeanManager()::destroy);
         tryToExecute("DbUnit after method ", () -> dbUnitHelper.afterMethod(currentMethod));
     }
 
     private void onFinishFinally() throws InvocationTargetException, IllegalAccessException {
-        tryToExecute("End of transaction", beanManager::endTransactions);
+        tryToExecute("End of transaction", BeanContext.getTestBeanManager()::endTransactions);
         tryToExecute("DbUnit after method ", () -> dbUnitHelper.afterFinallyMethod(currentMethod));
         tryToExecute("AfterDBUnit", () -> TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(AfterDBUnit.class), null));
 
@@ -103,14 +103,14 @@ public class SingleTestRunner extends BlockJUnit4ClassRunner {
         LOGGER.info("Initialize beans");
         dbUnitHelper = new DbUnitHelper(klass);
         TestPersistenceContext.getInstance().endAll();
-        beanManager.init(targetObject);
+        BeanContext.getTestBeanManager().init(targetObject);
 
         TestBeanManager.callMethod(targetObject, targetObject.getClass(), true, m -> m.isAnnotationPresent(BeforeDBUnit.class), null);
         tryToExecute("DbUnit clear method ", () -> dbUnitHelper.clearMethod(currentMethod));
 
         tryToExecute("DbUnit load method ", () -> dbUnitHelper.loadMethod(currentMethod));
-        beanManager.setBeanState(BeanState.CONSTRUCT);
-        beanManager.initStartup();
+        BeanContext.getTestBeanManager().setBeanState(BeanState.CONSTRUCT);
+        BeanContext.getTestBeanManager().initStartup();
     }
 
     private void tryToExecute(String message, Runnable consumer) {
