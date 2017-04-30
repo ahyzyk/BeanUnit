@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.ahyzyk.beanUnit.annotations.BeanImplementations;
 import pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils;
-import pl.ahyzyk.beanUnit.beans.TestSessionContext;
-import pl.ahyzyk.beanUnit.beans.TestUserTransaction;
+import pl.ahyzyk.beanUnit.beans.SessionContextImpl;
+import pl.ahyzyk.beanUnit.beans.UserTransactionImpl;
 import pl.ahyzyk.beanUnit.internal.beans.BeanContext;
 
 import javax.annotation.PostConstruct;
@@ -96,8 +96,8 @@ public class TestBeanManager {
         BeanManagerContext.add(Long.class, new TestBean(1L));
         BeanManagerContext.add(String.class, new TestBean(""));
         BeanManagerContext.add(BeanManager.class, new TestBean(BeanManagerContext.getCurrent()));
-        BeanManagerContext.addImplementation(UserTransaction.class, TestUserTransaction.class);
-        BeanManagerContext.addImplementation(SessionContext.class, TestSessionContext.class);
+        BeanManagerContext.addImplementation(UserTransaction.class, UserTransactionImpl.class);
+        BeanManagerContext.addImplementation(SessionContext.class, SessionContextImpl.class);
     }
 
     public void constructBean(TestBean bean) {

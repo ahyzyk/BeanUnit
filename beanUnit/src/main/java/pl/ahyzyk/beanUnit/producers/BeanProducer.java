@@ -13,15 +13,19 @@ import javax.enterprise.inject.spi.InjectionPoint;
 public class BeanProducer {
 
     @Produces
-    public Object defaultProducer(InjectionPoint ip) throws IllegalAccessException, InstantiationException {
-        Class clazz = (Class) ip.getType();
-        if (BeanManagerContext.get(clazz) == null) {
-            Class implementation = BeanManagerContext.getImplementation(clazz);
-            Object result = implementation.newInstance();
-            TestBean bean = new TestBean(result, BeanContext.getTestBeanManager());
-            BeanManagerContext.add(clazz, bean);
-            BeanContext.fillBean(bean.getSpy(), bean.getBeanClass());
+    public Object defaultProducer(InjectionPoint ip) {
+        try {
+            Class clazz = (Class) ip.getType();
+            if (BeanManagerContext.get(clazz) == null) {
+                Class implementation = BeanManagerContext.getImplementation(clazz);
+                Object result = implementation.newInstance();
+                TestBean bean = new TestBean(result, BeanContext.getTestBeanManager());
+                BeanManagerContext.add(clazz, bean);
+                BeanContext.fillBean(bean.getSpy(), bean.getBeanClass());
+            }
+            return BeanManagerContext.getCurrent().getBeans().get((Class) ip.getType()).getBean();
+        } catch (Exception ex) {
+            throw new RuntimeException("Default producer error", ex);
         }
-        return BeanManagerContext.getCurrent().getBeans().get((Class) ip.getType()).getBean();
     }
 }

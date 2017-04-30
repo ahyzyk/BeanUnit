@@ -12,7 +12,7 @@ import javax.transaction.*;
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class TestUserTransaction implements UserTransaction {
+public class UserTransactionImpl implements UserTransaction {
     @PersistenceContext
     private EntityManager entityManager;
 

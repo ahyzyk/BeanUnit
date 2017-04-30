@@ -14,7 +14,7 @@ import java.util.Properties;
 /**
  * Created by ahyzyk on 29.04.2017.
  */
-public class TestSessionContext implements SessionContext {
+public class SessionContextImpl implements SessionContext {
 
     @Inject
     private BeanManager beanManager;
