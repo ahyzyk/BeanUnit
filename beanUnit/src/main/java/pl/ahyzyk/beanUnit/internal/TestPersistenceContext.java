@@ -8,12 +8,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
+import pl.ahyzyk.beanUnit.annotations.defaultAnotations.DefaultTestConfiguration;
+import pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils;
 
 import javax.persistence.EntityManager;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
@@ -39,12 +42,26 @@ public class TestPersistenceContext {
         return instance;
     }
 
+    private static TestConfiguration findTestConfiguration(Class klass) {
+        // find in class annotation
+        if (klass.isAnnotationPresent(TestConfiguration.class)) {
+            return (TestConfiguration) klass.getAnnotation(TestConfiguration.class);
+        }
+        List<Method> methods = AnnotationUtils.getAnnotatedMethods(klass, TestConfiguration.class);
+        if (!methods.isEmpty()) {
+            try {
+                return (TestConfiguration) methods.get(0).invoke(null, new Object[]{});
+            } catch (Exception ex) {
+                throw new RuntimeException("Error during calling TestConfiguration method", ex);
+            }
+        }
+        return new DefaultTestConfiguration();
+    }
+
     public static void setPU(Class klass) {
         if (getInstance().providerMap.size() > 0) {
-            String defaultPersistence = "";
-            if (klass.isAnnotationPresent(TestConfiguration.class)) {
-                defaultPersistence = ((TestConfiguration) klass.getAnnotation(TestConfiguration.class)).persistenceUnitName();
-            }
+            String defaultPersistence = findTestConfiguration(klass).persistenceUnitName();
+
             if (defaultPersistence.length() == 0) {
                 defaultPersistence = getInstance().providerMap.keySet().stream().findFirst().get();
             }

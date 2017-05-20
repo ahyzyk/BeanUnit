@@ -1,11 +1,5 @@
 package pl.ahyzyk.test;
 
-import org.junit.runner.RunWith;
-import pl.ahyzyk.beanUnit.TestRunner;
-import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
+public class TestOracleHibernateBeforeEclipse extends TestH2Eclipse {
 
-
-@RunWith(TestRunner.class)
-@TestConfiguration(persistenceUnitName = "H2-eclipse")
-public class TestOracleHibernateBeforeEclipse extends TestEjb {
 }
