@@ -43,10 +43,14 @@ public class TestPersistenceContext {
     }
 
     private static TestConfiguration findTestConfiguration(Class klass) {
+        if (klass == Object.class) {
+            return new DefaultTestConfiguration();
+        }
         // find in class annotation
         if (klass.isAnnotationPresent(TestConfiguration.class)) {
             return (TestConfiguration) klass.getAnnotation(TestConfiguration.class);
         }
+        //find method with testConfiguration
         List<Method> methods = AnnotationUtils.getAnnotatedMethods(klass, TestConfiguration.class);
         if (!methods.isEmpty()) {
             try {
@@ -55,7 +59,8 @@ public class TestPersistenceContext {
                 throw new RuntimeException("Error during calling TestConfiguration method", ex);
             }
         }
-        return new DefaultTestConfiguration();
+        return findTestConfiguration(klass.getSuperclass());
+
     }
 
     public static void setPU(Class klass) {
