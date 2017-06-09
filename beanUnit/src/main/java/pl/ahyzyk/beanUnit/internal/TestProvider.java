@@ -133,4 +133,8 @@ public class TestProvider {
     public String toString() {
         return "TestProvider : " + persistanceName;
     }
+
+    public PersistenceUnitInfoImpl getPersistenceUnitInfo() {
+        return persistenceUnitInfo;
+    }
 }

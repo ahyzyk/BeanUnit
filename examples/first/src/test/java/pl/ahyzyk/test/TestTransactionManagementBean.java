@@ -9,7 +9,6 @@ import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.transaction.*;
 
 /**
  * Created by ahyzyk on 22.04.2017.
@@ -22,7 +21,7 @@ public class TestTransactionManagementBean {
     private TransactionManagementBean transactionManagementBean;
 
     @Test
-    public void test1() throws SystemException, NotSupportedException, HeuristicRollbackException, HeuristicMixedException, RollbackException {
+    public void test1() throws Exception {
         transactionManagementBean.test1();
     }
 }

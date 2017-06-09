@@ -10,8 +10,10 @@ import org.xml.sax.SAXException;
 import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
 import pl.ahyzyk.beanUnit.annotations.defaultAnotations.DefaultTestConfiguration;
 import pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils;
+import pl.ahyzyk.beanUnit.dataSource.LocalDataSource;
 
 import javax.persistence.EntityManager;
+import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -213,5 +215,15 @@ public class TestPersistenceContext {
 
     public String getDefault() {
         return defaultPersistence;
+    }
+
+    public DataSource getDataSource(String pu) {
+        Properties properties = providerMap.get(pu).getPersistenceUnitInfo().getProperties();
+        return new LocalDataSource(
+                properties.getProperty("javax.persistence.jdbc.url"),
+                properties.getProperty("javax.persistence.jdbc.user"),
+                properties.getProperty("javax.persistence.jdbc.password"));
+
+
     }
 }

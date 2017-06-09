@@ -5,6 +5,7 @@ import pl.ahyzyk.beanUnit.internal.BeanManagerContext;
 import pl.ahyzyk.beanUnit.internal.TestBean;
 import pl.ahyzyk.beanUnit.internal.TestBeanManager;
 import pl.ahyzyk.beanUnit.producers.BeanProducer;
+import pl.ahyzyk.beanUnit.producers.DataSourceProducer;
 import pl.ahyzyk.beanUnit.producers.InstanceProducer;
 import pl.ahyzyk.beanUnit.producers.PersistenceContextProducer;
 
@@ -37,6 +38,7 @@ public class BeanContext {
     public static void clearProducers() {
         addProducer(new PersistenceContextProducer());
         addProducer(new InstanceProducer());
+        addProducer(new DataSourceProducer());
     }
 
     public static void addProducer(Object producer) {

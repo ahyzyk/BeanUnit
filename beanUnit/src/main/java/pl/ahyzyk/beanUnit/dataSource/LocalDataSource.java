@@ -15,7 +15,7 @@ public class LocalDataSource implements DataSource, Serializable {
     private String username;
     private String password;
 
-    LocalDataSource(String connectionString, String username, String password) {
+    public LocalDataSource(String connectionString, String username, String password) {
         this.connectionString = connectionString;
         this.username = username;
         this.password = password;
