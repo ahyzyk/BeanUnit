@@ -10,7 +10,7 @@ import org.xml.sax.SAXException;
 import pl.ahyzyk.beanUnit.annotations.TestConfiguration;
 import pl.ahyzyk.beanUnit.annotations.defaultAnotations.DefaultTestConfiguration;
 import pl.ahyzyk.beanUnit.annotations.utils.AnnotationUtils;
-import pl.ahyzyk.beanUnit.dataSource.LocalDataSource;
+import pl.ahyzyk.beanUnit.dataSource.TestDataSource;
 
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
@@ -219,10 +219,15 @@ public class TestPersistenceContext {
 
     public DataSource getDataSource(String pu) {
         Properties properties = providerMap.get(pu).getPersistenceUnitInfo().getProperties();
-        return new LocalDataSource(
-                properties.getProperty("javax.persistence.jdbc.url"),
-                properties.getProperty("javax.persistence.jdbc.user"),
-                properties.getProperty("javax.persistence.jdbc.password"));
+        try {
+            return new TestDataSource(
+                    properties.getProperty("javax.persistence.jdbc.driver"),
+                    properties.getProperty("javax.persistence.jdbc.url"),
+                    properties.getProperty("javax.persistence.jdbc.user"),
+                    properties.getProperty("javax.persistence.jdbc.password"));
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Error during create datasource", e);
+        }
 
 
     }
