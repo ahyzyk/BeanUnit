@@ -247,7 +247,10 @@ public class DbUnitHelper {
         InputStream stream = this.getClass().getClassLoader().getResourceAsStream(file);
         FlatXmlProducer producer = new FlatXmlProducer(new InputSource(stream));
         producer.setColumnSensing(columnSensing);
-        return new CachedDataSet(producer);
+
+        ReplacementDataSet result = new ReplacementDataSet(new CachedDataSet(producer));
+        result.addReplacementObject("{null}", null);
+        return result;
     }
 
 

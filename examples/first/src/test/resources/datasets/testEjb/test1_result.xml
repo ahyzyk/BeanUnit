@@ -1,6 +1,6 @@
 <dataset>
     <TABLE1 ID="8" VALUE="2" data="2016-03-03"/>
-    <TABLE1 ID="9" data="2016-03-03"/>
+    <TABLE1 ID="9" VALUE="{null}" data="2016-03-03"/>
     <TABLE1 ID="1" VALUE="EasyEjb postConstruct"/>
     <TABLE1 ID="2" VALUE="EasyEjb preDestroy"/>
     <TABLE1 ID="3" VALUE="EasyEjb1 postConstruct"/>
