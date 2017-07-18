@@ -18,7 +18,9 @@ public class TestDataSource implements DataSource, Serializable {
     private String password;
 
     public TestDataSource(String driver, String connectionString, String username, String password) throws ClassNotFoundException {
-        Class.forName(driver);
+        if (driver != null && !driver.isEmpty()) {
+            Class.forName(driver);
+        }
         this.connectionString = connectionString;
         this.username = username;
         this.password = password;
