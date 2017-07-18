@@ -100,6 +100,7 @@ public class BeanContext {
 
     private static void inject(InjectionPoint ip, Object object, Object injectObject) {
         Field field = ((Field) ip.getMember());
+        field.setAccessible(true);
         try {
             field.set(object, injectObject);
         } catch (Exception e) {
