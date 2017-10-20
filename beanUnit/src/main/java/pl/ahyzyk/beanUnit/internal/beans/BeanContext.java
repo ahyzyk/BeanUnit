@@ -68,11 +68,14 @@ public class BeanContext {
         return beanMap.get(aClass);
     }
 
-    public static void fillBean(Object beanObject, Class clazz) {
+    public static void fillBean(Object beanObject, Object realObject, Class clazz) {
         Bean<?> bean = getBean(clazz);
         for (InjectionPoint ip : bean.getInjectionPoints()) {
             try {
                 inject(beanObject, ip);
+                if (realObject != null) {
+                    inject(realObject, ip);
+                }
             } catch (Exception ex) {
                 throw new RuntimeException("Error during setting field " + ip.getMember(), ex);
             }
@@ -91,7 +94,7 @@ public class BeanContext {
             Object result = new BeanProducer().defaultProducer(ip);
             if (result instanceof TestBean) {
                 BeanManagerContext.add(((TestBean) result).getBeanClass(), (TestBean) result);
-                fillBean(((TestBean) result).getSpy(), ((TestBean) result).getBeanClass());
+                fillBean(((TestBean) result).getSpy(), ((TestBean) result).getObject(), ((TestBean) result).getBeanClass());
             }
             return result;
         }

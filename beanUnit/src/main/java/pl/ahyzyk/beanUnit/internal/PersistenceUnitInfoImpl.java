@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.SharedCacheMode;
@@ -225,10 +224,12 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
     }
 
     private DataSource lookupDataSource(final String name) {
-        try {
-            return (DataSource) ((Context) InitialContext.doLookup("java:comp/env")).lookup(name);
-        } catch (final NamingException e) {
-            LOGGER.warn("Unable to find data source: " + name);
+        if (name != null) {
+            try {
+                return (DataSource) ((Context) InitialContext.doLookup("java:comp/env")).lookup(name);
+            } catch (Exception e) {
+                LOGGER.warn("Unable to find data source: " + name);
+            }
         }
         return null;
     }

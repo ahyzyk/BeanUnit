@@ -6,7 +6,7 @@
 
     <groupId>pl.ahyzyk</groupId>
     <artifactId>beanUnit</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>

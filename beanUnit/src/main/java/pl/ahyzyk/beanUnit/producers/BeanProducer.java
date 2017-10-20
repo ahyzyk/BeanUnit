@@ -21,7 +21,7 @@ public class BeanProducer {
                 Object result = implementation.newInstance();
                 TestBean bean = new TestBean(result, BeanContext.getTestBeanManager());
                 BeanManagerContext.add(clazz, bean);
-                BeanContext.fillBean(bean.getSpy(), bean.getBeanClass());
+                BeanContext.fillBean(bean.getSpy(), bean.getObject(), bean.getBeanClass());
             }
             return BeanManagerContext.getCurrent().getBeans().get((Class) ip.getType()).getBean();
         } catch (Exception ex) {

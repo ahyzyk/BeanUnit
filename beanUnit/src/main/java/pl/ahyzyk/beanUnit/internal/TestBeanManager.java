@@ -78,7 +78,7 @@ public class TestBeanManager {
         initDefaultInjects();
         initImplementations(object);
 
-        BeanContext.fillBean(object, object.getClass());
+        BeanContext.fillBean(object, null, object.getClass());
 
 
     }
@@ -114,11 +114,6 @@ public class TestBeanManager {
     }
 
 
-
-
-
-
-
     private TestBean findInjectObject(Field field) throws IllegalAccessException, InstantiationException {
         Class clazz = field.getType();
 
@@ -127,7 +122,7 @@ public class TestBeanManager {
             Object result = implementation.newInstance();
             TestBean bean = new TestBean(result, this);
             BeanManagerContext.add(clazz, bean);
-            BeanContext.fillBean(bean.getSpy(), bean.getBeanClass());
+            BeanContext.fillBean(bean.getSpy(), bean.getObject(), bean.getBeanClass());
         }
         return BeanManagerContext.get(clazz);
     }

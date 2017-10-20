@@ -44,8 +44,7 @@ public class TestContext extends InitialContext implements InitialContextFactory
             return null;
         }
 
-        Object ret = contextMap.get(name);
-        return (ret != null) ? ret : super.lookup(name);
+        return contextMap.get(name);
     }
 
     @Override
@@ -53,7 +52,6 @@ public class TestContext extends InitialContext implements InitialContextFactory
         contextMap.putAll((Map<? extends String, ?>) environment);
         return this;
     }
-
 
 
 }

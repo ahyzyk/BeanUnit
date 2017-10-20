@@ -19,7 +19,6 @@ public class EasyEjb {
     private void postConstruct() {
         System.out.println("PostConstruct");
         table1Manager.create(1L, "EasyEjb postConstruct");
-
     }
 
     @PreDestroy
@@ -27,6 +26,10 @@ public class EasyEjb {
         table1Manager.create(2L, "EasyEjb preDestroy");
     }
 
+
+    public void echo(String s) {
+        System.out.println(s);
+    }
 
 
     public void testMe() {
